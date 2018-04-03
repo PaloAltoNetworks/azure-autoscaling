@@ -1,0 +1,347 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmSku": {
+       "type": "string",
+       "allowedValues": [
+          "byol",
+          "bundle1",
+          "bundle2"
+       ],
+       "metadata": {
+          "description": "Firewall License Model"
+       },
+       "defaultValue": "bundle1"
+    },
+    "vmSize": {
+       "type": "string",
+       "allowedValues": [
+          "Standard_D3",
+          "Standard_D4",
+          "Standard_D3_v2",
+          "Standard_D4_v2",
+          "Standard_A4",
+          "Standard_DS3_v2",
+          "Standard_DS4_v2"
+       ],
+       "metadata": {
+          "description": "Azure VM size for VM-Series"
+       },
+       "defaultValue": "Standard_D3_v2"
+    },
+    "vmssName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-57 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "maxLength": 57
+    },
+    "imageVersion": {
+       "type": "string",
+       "allowedValues": [
+          "latest",
+          "8.1.0",
+          "8.0.0",
+          "7.1.1"
+       ],
+       "metadata": {
+          "description": "PAN OS Version"
+       },
+       "defaultValue": "latest"
+    },
+    "instanceCount": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of VM instances (1000 or less)."
+      },
+      "maxValue": 1000,
+      "defaultValue": 2
+    },
+    "ILBaddress": {
+      "type": "string",
+      "metadata": {
+        "description": "IP Address of Internal Load Balancer"
+      },
+      "defaultValue": "32.32.32.32"
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureadmin",
+      "metadata": {
+        "description": "Admin username on all VMs."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "defaultValue": "azure@dmin123",
+      "metadata": {
+        "description": "Admin password on all VMs."
+      }
+    }
+  },
+  "variables": {
+    "namingInfix": "[toLower(substring(concat(parameters('vmssName'), uniqueString(resourceGroup().id)), 0, 9))]",
+    "longNamingInfix": "[toLower(parameters('vmssName'))]",
+    "imagePublisher": "paloaltonetworks",
+    "imageOffer" : "vmseries1",
+    "addressPrefix": "10.0.0.0/16",
+    "subnetPrefixuntrust": "10.0.8.0/24",
+    "subnetPrefixtrust": "10.0.9.0/24",
+    "subnetPrefixmgmt": "10.0.10.0/24",
+    "virtualNetworkName": "[concat(variables('namingInfix'), 'vnet')]",
+    "publicIPAddressName": "[concat(variables('namingInfix'), 'pip')]",
+    "autoscaleName": "[concat(variables('namingInfix'), '-as')]",
+    "subnetNameUntrust": "[concat(variables('namingInfix'), 'subnetuntrust')]",
+    "subnetNameTrust": "[concat(variables('namingInfix'), 'subnettrust')]",
+    "subnetNameMgmt": "[concat(variables('namingInfix'), 'subnetmgmt')]",
+    "nicNameMgmt": "[concat(variables('namingInfix'), 'nicmgmt')]",
+    "nicNameUntrust": "[concat(variables('namingInfix'), 'nicuntrust')]",
+    "nicNameTrust": "[concat(variables('namingInfix'), 'nictrust')]",
+    "ipConfigNameuntrust": "[concat(variables('namingInfix'), 'ipconfiguntrust')]",
+    "ipConfigNametrust": "[concat(variables('namingInfix'), 'ipconfigtrust')]",
+    "ipConfigNamemgmt": "[concat(variables('namingInfix'), 'ipconfigmgmt')]",
+    "virtualNetworkID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "appGwPublicIPAddressName": "[concat(variables('namingInfix'), 'appGwPip')]",
+    "appGwName": "[concat(variables('namingInfix'), 'appGw')]",
+    "appGwPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appGwPublicIPAddressName'))]",
+    "appGwID": "[resourceId('Microsoft.Network/applicationGateways',variables('appGwName'))]",
+    "appGwSubnetName": "[concat(variables('namingInfix'),'appGwSubnet')]",
+    "appGwSubnetPrefix": "10.0.1.0/24",
+    "appGwSubnetID": "[concat(variables('virtualNetworkID'),'/subnets/',variables('appGwSubnetName'))]",
+    "appGwFrontendPort": 80,
+    "appGwBackendPort": 80,
+    "appGwBePoolName": "[concat(variables('namingInfix'), 'appGwBepool')]",
+    "computeApiVersion": "2017-03-30",
+    "networkApiVersion": "2017-04-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetNameUntrust')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefixuntrust')]"
+            }
+          },
+          {
+            "name": "[variables('subnetNameTrust')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefixtrust')]"
+            }
+          },
+          {
+            "name": "[variables('subnetNameMgmt')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefixmgmt')]"
+            }
+          },
+          {
+            "name": "[variables('appGwSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('appGwSubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('appGwPublicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('namingInfix')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-03-30",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "sku": {
+        "name": "[parameters('vmSize')]",
+        "tier": "Standard",
+        "capacity": "[parameters('instanceCount')]"
+      },
+      "plan": {
+         "name": "[parameters('vmSku')]",
+         "product": "[variables('imageOffer')]",
+         "publisher": "[variables('imagePublisher')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+                "managedDisk": {
+                        "storageAccountType": "Standard_LRS"
+                },
+                "caching": "ReadWrite",
+                "createOption": "FromImage",
+                "diskSizeGB": 60
+            },
+            "dataDisks": [],
+            "imageReference": {
+                "publisher": "[variables('imagePublisher')]",
+                "offer": "[variables('imageOffer')]",
+                "sku": "[parameters('vmSku')]",
+                "version": "[parameters('imageVersion')]"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('namingInfix')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicNameMgmt')]",
+                "properties": {
+                  "primary": "true",
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigNamemgmt')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameMgmt'))]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "[variables('nicNameUntrust')]",
+                "properties": {
+                  "primary": "false",
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigNameuntrust')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameUntrust'))]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "[variables('nicNameTrust')]",
+                "properties": {
+                  "primary": "false",
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigNametrust')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameTrust'))]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+        "type": "microsoft.insights/autoscalesettings",
+        "name": "[variables('autoscaleName')]",
+        "apiVersion": "2014-04-01",
+        "location": "[resourceGroup().location]",
+        "tags": {},
+        "scale": null,
+        "properties": {
+            "profiles": [
+                {
+                    "name": "Auto created scale condition",
+                    "capacity": {
+                        "minimum": "0",
+                        "maximum": "0",
+                        "default": "0"
+                    },
+                    "rules": [
+                        {
+                            "metricTrigger": {
+                                "metricName": "Percentage CPU",
+                                "metricNamespace": "",
+                                "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                                "timeGrain": "PT1M",
+                                "statistic": "Average",
+                                "timeWindow": "PT10M",
+                                "timeAggregation": "Average",
+                                "operator": "GreaterThan",
+                                "threshold": 70
+                            },
+                            "scaleAction": {
+                                "direction": "Increase",
+                                "type": "ChangeCount",
+                                "value": "1",
+                                "cooldown": "PT5M"
+                            }
+                        },
+                            {
+                            "scaleAction": {
+                                "direction": "Decrease",
+                                "type": "ChangeCount",
+                                "value": "1",
+                                "cooldown": "PT5M"
+                            },
+                            "metricTrigger": {
+                                "metricName": "Percentage CPU",
+                                "metricNamespace": "",
+                                "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                                "operator": "LessThan",
+                                "statistic": "Average",
+                                "threshold": 20,
+                                "timeAggregation": "Average",
+                                "timeGrain": "PT1M",
+                                "timeWindow": "PT10M"
+                            }
+                      }
+                    ]
+                }
+            ],
+            "notifications": [
+            {
+                "operation": "Scale",
+                "webhooks": [
+                    {
+                        "serviceUri": "https://jjmhackapp.azurewebsites.net/api/HttpTriggerCSharp1?code=8SBvZkLIvAIAsO9C0RcPxgYSnxTZaJy0EYza92yDdM1Vrk3OmAUrHQ==",
+                        "properties": {}
+                    }
+                ]
+            }
+        ],
+            "enabled": true,
+            "name": "[variables('autoscaleName')]",
+            "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+        },
+        "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+        ]
+    }
+  ]
+}
