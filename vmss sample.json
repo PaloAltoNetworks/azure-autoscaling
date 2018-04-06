@@ -42,21 +42,11 @@
        "allowedValues": [
           "latest",
           "8.1.0",
-          "8.0.0",
-          "7.1.1"
+          "8.0.0"
        ],
        "metadata": {
           "description": "PAN OS Version"
-       },
-       "defaultValue": "latest"
-    },
-    "instanceCount": {
-      "type": "int",
-      "metadata": {
-        "description": "Number of VM instances (1000 or less)."
-      },
-      "maxValue": 1000,
-      "defaultValue": 2
+       }
     },
     "ILBaddress": {
       "type": "string",
@@ -77,43 +67,78 @@
       "defaultValue": "azure@dmin123",
       "metadata": {
         "description": "Admin password on all VMs."
-      },
-      "customstorageaccount": {
+      }
+    },
+    "customstorageaccount": {
             "type": "string",
             "metadata":{
               "description": "Name of storage account for bootstrap"
             }
       },
-      "customaccesskey": {
+    "customaccesskey": {
             "type": "string",
             "metadata":{
               "description": "Storage account access key to read blob data privately"
             }
       },
-      "customfileshare": {
+    "customfileshare": {
             "type": "string",
             "metadata":{
               "description": "File Share containing bootstrap file"
             }
       },
-      "customsharedirectory": {
-            "type": "string",
-            "metadata":{
-              "description": "(OPTIONAL) Directory name under File Share containing bootstrap files"
-            }
-      },
-      "webhookIPAddress" : {
+    "api_key": {
              "type": "string",
-             "description": "IP address of worker node where the webhook listener is listening. Right now port 80" 
-      },
-      "api_key": {
-             "type": "string",
-             "description": "API key for firewall"
+             "metadata":{
+                "description": "API key for firewall"
+             }
+    },
+    "vmScaleSetMinCount": {
+      "type": "int",
+      "defaultValue": 0, 
+      "metadata": {
+          "description": "The minimum (and default) number of FWs that will be deployed into the VM Scale Set."
       }
-    }
-  },
+    }, 
+    "vmScaleSetMaxCount": {
+      "type": "int",
+      "defaultValue": 3, 
+      "metadata": {
+          "description": "The maximum number of FWs that can be deployed into the VM Scale Set."
+      }
+    },
+    "autoScaleMetric": {
+             "type": "string",
+             "allowedValues": [
+                  "DataPlaneCPUUtilizationPct", 
+                  "SessionUtilizationPct", 
+                  "SslProxyUtilizationPct",
+                  "GPGatewayTunnelUtilizationPct",
+                  "DPPacketBufferUtilizationPct"
+                ], 
+             "defaultValue": "SessionUtilization(%)", 
+             "metadata": {
+                 "description": "Select the metric on which auto scale events should be triggered."
+                } 
+    },
+    "appInsights": {
+             "type" : "string",
+             "defaultValue": "CREATE_NEW_APP_INSIGHTS_AND_ENTER_NAME_HERE", 
+             "metadata": {
+                   "description": "Enter the name of your existing Application Insights environment that will be used to receive custom metrics. Instrumetation key needs to be added to bootstrap xml"
+        }
+    },
+    "StorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the name of the your storage account. Enter up to 20 characters"
+      }
+  }
+},
   "variables": {
+    "resourceGroupName": "[resourceGroup().name]", 
     "namingInfix": "[toLower(substring(concat(parameters('vmssName'), uniqueString(resourceGroup().id)), 0, 9))]",
+    "strAccountName": "[concat(parameters('StorageAccountName'),variables('namingInfix'))]",
     "longNamingInfix": "[toLower(parameters('vmssName'))]",
     "imagePublisher": "paloaltonetworks",
     "imageOffer" : "vmseries1",
@@ -121,6 +146,7 @@
     "subnetPrefixuntrust": "10.0.8.0/24",
     "subnetPrefixtrust": "10.0.9.0/24",
     "subnetPrefixmgmt": "10.0.10.0/24",
+    "WorkerPrivateIPAddress": "10.0.10.5",
     "virtualNetworkName": "[concat(variables('namingInfix'), 'vnet')]",
     "publicIPAddressName": "[concat(variables('namingInfix'), 'pip')]",
     "autoscaleName": "[concat(variables('namingInfix'), '-as')]",
@@ -135,6 +161,7 @@
     "ipConfigNamemgmt": "[concat(variables('namingInfix'), 'ipconfigmgmt')]",
     "virtualNetworkID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "appGwPublicIPAddressName": "[concat(variables('namingInfix'), 'appGwPip')]",
+    "WorkerPublicIPAddressName": "[concat(variables('namingInfix'), 'workerPip')]",
     "appGwName": "[concat(variables('namingInfix'), 'appGw')]",
     "appGwPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appGwPublicIPAddressName'))]",
     "appGwID": "[resourceId('Microsoft.Network/applicationGateways',variables('appGwName'))]",
@@ -146,9 +173,46 @@
     "appGwBePoolName": "[concat(variables('namingInfix'), 'appGwBepool')]",
     "computeApiVersion": "2017-03-30",
     "networkApiVersion": "2017-04-01",
-    "customData": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare'), 'share-directory', parameters(customsharedirectory')]"
+    "appInsightsApiVersion": "2015-04-01", 
+    "appInsightsComponentsApiVersion": "2015-05-01",
+    "appInsightsName": "[replace(split(parameters('appInsights'), ':')[0], 'CREATE_NEW_APP_INSIGHTS_AND_ENTER_NAME_HERE', concat(deployment().name, '-appinsights'))]", 
+    "appInsightsNameArray": "[split(concat(variables('appInsightsName'), ';', variables('resourceGroupName')) , ';')]", 
+    "autoScaleMetric": "[parameters('autoScaleMetric')]", 
+     "scaleMetricMap": {
+        "DataPlaneCPUUtilizationPct": {
+            "metricName": "customMetrics/DataPlaneCPUUtilizationPct", 
+            "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+        }, 
+        "SessionUtilizationPct": {
+            "metricName": "customMetrics/panSessionUtilization", 
+            "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+        }, 
+        "SslProxyUtilizationPct": {
+            "metricName": "customMetrics/panSessionSslProxyUtilization", 
+            "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+        },
+        "GPGatewayTunnelUtilizationPct": {
+          "metricName": "customMetrics/panpanGPGWUtilizationActiveTunnels", 
+          "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+        },
+        "DPPacketBufferUtilizationPct": {
+          "metricName": "customMetrics/DataPlanePacketBufferUtilization", 
+          "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+      }       
+    },     
+    "customData": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]"
   },
   "resources": [
+    {
+      "comments": "# Storage Account",
+      "name": "[variables('strAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
     {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
@@ -186,6 +250,104 @@
             }
           }
         ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('WorkerPublicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2017-04-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "worker-eth-0",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "tags": {
+        "displayName": "worker-node-eth0]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig-worker",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('WorkerPrivateIPAddress')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerpublicIPName'))]"
+              },
+              "subnet": {
+                "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameMgmt'))]"
+              }
+            }
+          }
+        ]
+      }
+    },    
+    {
+      "apiVersion": "2017-04-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "worker-node",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+          "hardwareProfile": {
+              "vmSize": "Standard_A1"
+          },
+          "osProfile": {
+              "computername": "worker-vm",
+              "adminUsername": "[variables('adminUsername')]",
+              "adminPassword": "[variables('adminPassword')]"
+          },
+          "storageProfile": {
+             "imageReference": {
+                  "publisher": "Canonical",
+                  "offer": "UbuntuServer",
+                  "sku": "16.04-LTS",
+                  "version": "latest"
+              },
+              "osDisk": {
+                  "name": "worker-osdisk",
+                  "vhd": {
+                      "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('strAccountName')), variables('networkApiVersion')).primaryEndpoints.blob,'vhds/osdisk.vhd')]"
+                  },
+                  "caching": "ReadWrite",
+                  "createOption": "FromImage"
+              }
+          },
+          "networkProfile": {
+             "networkInterfaces": [
+               {
+                 "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('worker-eth-0'))]",
+                 "properties": { "primary": true}
+               }
+             ]
+          }
+      }
+    },
+    {
+      "name": "[concat('worker-node','/vm-customscript')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2017-04-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+          "[concat('Microsoft.Compute/virtualMachines/', 'worker-node')]"
+      ],
+      "properties":
+       {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "typeHandlerVersion": "2.0",
+            "settings": {
+               "fileUris": ["https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py"],
+               "commandToExecute": "apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon && python node_worker.py"
+           }
       }
     },
     {
@@ -301,7 +463,7 @@
       "sku": {
         "name": "[parameters('vmSize')]",
         "tier": "Standard",
-        "capacity": "[parameters('instanceCount')]"
+        "capacity": "[parameters('vmScaleSetMinCount')]"
       },
       "plan": {
          "name": "[parameters('vmSku')]",
@@ -411,16 +573,16 @@
                 {
                     "name": "Auto created scale condition",
                     "capacity": {
-                        "minimum": "0",
-                        "maximum": "0",
-                        "default": "0"
+                      "default": "[parameters('vmScaleSetMinCount')]", 
+                      "maximum": "[parameters('vmScaleSetMaxCount')]", 
+                      "minimum": "[parameters('vmScaleSetMinCount')]"
                     },
                     "rules": [
                         {
                             "metricTrigger": {
-                                "metricName": "Percentage CPU",
+                              "metricName": "[variables('scaleMetricMap')[variables('autoScaleMetric')].metricName]", 
                                 "metricNamespace": "",
-                                "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                                "metricResourceUri": "[variables('scaleMetricMap')[variables('autoScaleMetric')].metricResourceUri]",
                                 "timeGrain": "PT1M",
                                 "statistic": "Average",
                                 "timeWindow": "PT10M",
@@ -443,9 +605,9 @@
                                 "cooldown": "PT5M"
                             },
                             "metricTrigger": {
-                                "metricName": "Percentage CPU",
+                                "metricName": "[variables('scaleMetricMap')[variables('autoScaleMetric')].metricName]",
                                 "metricNamespace": "",
-                                "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                                "metricResourceUri": "[variables('scaleMetricMap')[variables('autoScaleMetric')].metricResourceUri]",
                                 "operator": "LessThan",
                                 "statistic": "Average",
                                 "threshold": 20,
@@ -467,7 +629,7 @@
                 },
                 "webhooks": [
                     {
-                        "serviceUri": "concat['http://', parameters('webhookIPAddress')]",
+                        "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']",
                         "properties": {
                           "api-key" : "[variables('api_key')]",
                           "ilb-address": "[variables('ILBaddress')]"
