@@ -172,7 +172,7 @@
     "appGwBackendPort": 80,
     "appGwBePoolName": "[concat(variables('namingInfix'), 'appGwBepool')]",
     "computeApiVersion": "2017-03-30",
-    "networkApiVersion": "2017-04-01",
+    "networkApiVersion": "2017-06-01",
     "appInsightsApiVersion": "2015-04-01", 
     "appInsightsComponentsApiVersion": "2015-05-01",
     "appInsightsName": "[replace(split(parameters('appInsights'), ':')[0], 'CREATE_NEW_APP_INSIGHTS_AND_ENTER_NAME_HERE', concat(deployment().name, '-appinsights'))]", 
@@ -267,7 +267,8 @@
       "name": "worker-eth-0",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('WorkerPublicIPAddressName'))]"
       ],
       "tags": {
         "displayName": "worker-node-eth0]"
@@ -280,7 +281,7 @@
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[variables('WorkerPrivateIPAddress')]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerpublicIPName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerPublicIPAddressName'))]"
               },
               "subnet": {
                 "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameMgmt'))]"
