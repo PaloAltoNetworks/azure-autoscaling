@@ -39,6 +39,7 @@
     },
     "imageVersion": {
        "type": "string",
+       "defaultValue": "latest",
        "allowedValues": [
           "latest",
           "8.1.0",
@@ -109,6 +110,7 @@
     },
     "autoScaleMetric": {
              "type": "string",
+             "defaultValue": "SessionUtilizationPct",
              "allowedValues": [
                   "DataPlaneCPUUtilizationPct", 
                   "SessionUtilizationPct", 
@@ -116,7 +118,6 @@
                   "GPGatewayTunnelUtilizationPct",
                   "DPPacketBufferUtilizationPct"
                 ], 
-             "defaultValue": "SessionUtilization(%)", 
              "metadata": {
                  "description": "Select the metric on which auto scale events should be triggered."
                 } 
@@ -131,7 +132,7 @@
     "StorageAccountName": {
       "type": "string",
       "metadata": {
-        "description": "This is the name of the your storage account. Enter up to 20 characters"
+        "description": "This is the name of the storage account. Enter up to 20 characters"
       }
   }
 },
@@ -208,16 +209,16 @@
       "name": "[variables('strAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
-      "properties": {
-        "accountType": "Standard_LRS"
+      "apiVersion": "[variables('networkApiVersion')]",
+      "sku": {
+        "name": "Standard_LRS"
       }
     },
     {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -256,13 +257,13 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('WorkerPublicIPAddressName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }
     },
     {
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "worker-eth-0",
       "location": "[resourceGroup().location]",
@@ -292,7 +293,7 @@
       }
     },    
     {
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "worker-node",
       "location": "[resourceGroup().location]",
@@ -303,8 +304,8 @@
           },
           "osProfile": {
               "computername": "worker-vm",
-              "adminUsername": "[variables('adminUsername')]",
-              "adminPassword": "[variables('adminPassword')]"
+              "adminUsername": "[parameters('adminUsername')]",
+              "adminPassword": "[parameters('adminPassword')]"
           },
           "storageProfile": {
              "imageReference": {
@@ -335,7 +336,7 @@
     {
       "name": "[concat('worker-node','/vm-customscript')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('computeApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/', 'worker-node')]"
@@ -355,7 +356,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('appGwPublicIPAddressName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }
@@ -364,7 +365,7 @@
       "type": "Microsoft.Network/applicationGateways",
       "name": "[variables('appGwName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('appGwPublicIPAddressName'))]"
@@ -499,7 +500,7 @@
             "computerNamePrefix": "[variables('namingInfix')]",
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]",
-            "customData": "[base64(parameters('customData'))]"
+            "customData": "[base64(variables('customData'))]"
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [
@@ -630,10 +631,10 @@
                 },
                 "webhooks": [
                     {
-                        "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']",
+                        "serviceUri": "[concat('http://', variables('WorkerPrivateIPAddress'))]",
                         "properties": {
-                          "api-key" : "[variables('api_key')]",
-                          "ilb-address": "[variables('ILBaddress')]"
+                          "api-key" : "[parameters('api_key')]",
+                          "ilb-address": "[parameters('ILBaddress')]"
                         }
                     }
                 ]
