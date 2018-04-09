@@ -208,7 +208,7 @@
       "name": "[variables('strAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "accountType": "Standard_LRS"
       }
@@ -217,7 +217,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -256,13 +256,13 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('WorkerPublicIPAddressName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }
     },
     {
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "worker-eth-0",
       "location": "[resourceGroup().location]",
@@ -292,7 +292,7 @@
       }
     },    
     {
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "worker-node",
       "location": "[resourceGroup().location]",
@@ -335,7 +335,7 @@
     {
       "name": "[concat('worker-node','/vm-customscript')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/', 'worker-node')]"
@@ -355,7 +355,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('appGwPublicIPAddressName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }
@@ -364,7 +364,7 @@
       "type": "Microsoft.Network/applicationGateways",
       "name": "[variables('appGwName')]",
       "location": "[resourceGroup().location]",
-      "apiVersion": "variables('networkApiVersion')",
+      "apiVersion": "[variables('networkApiVersion')]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('appGwPublicIPAddressName'))]"
