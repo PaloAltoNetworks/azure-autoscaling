@@ -14,17 +14,26 @@ import logging
 import sys
 import collections
 import itertools
+from applicationinsights import TelemetryClient
 
 #TO DO
 #1. this script assume az login has been done apriori
 #   Need to update this with a serive principal etc.
 #   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
+#   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
+# ---- ADDED STUB
+
 #2. Figure out the application insighits piece
 #   https://docs.microsoft.com/en-us/azure/monitoring-and-diagnostics/monitoring-enable-alerts-using-template
 #   Seems like there might be a way to do custom metrics
 #   https://github.com/F5Networks/f5-azure-arm-templates/blob/master/supported/solutions/autoscale/waf/existing_stack/PAYG/azuredeploy.json
+# -- ADDED STUB
+
 #3. The worker node can be launched as part of the template with a custom script extension to launch the script
-#   So in this case can VMSS notification URL be http://{ref privatr ip}
+#   So in this case can VMSS notification URL be http://{ref private ip}
+# -- MOSTLY DONE...NEED TO PASS IN CMD LINE PARAMS
+
+# 4. Use Azure Table Storage for storing the current fw instance list?
 
 LOG_FILENAME = 'azure-autoscaling.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
@@ -41,6 +50,14 @@ scaled_fw_untrust_ip = "2.2.2.2"
 ilb_ip = "3.3.3.3"
 api_key = "some api key"
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+
+metric_list = ("DataPlaneCPUUtilizationPct", "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
+
+##NEED FROM COMMAND LINE OR IN ENVIRONMENT VARIABLE
+service_principal = 'service_principal'
+tenant_id = 'tenant_id'
+client_password = 'client_secret'
+instrumentation_key = 'instrumentation-key'
 
 
 def check_fw_up(ip_to_monitor):
@@ -266,5 +283,11 @@ def index():
 
     # The following lines will call the BottleDaemon script and launch a daemon in the background.
     if __name__ == "__main__":
-      daemon_run(host='0.0.0.0', port=80)
+        args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
+        y = json.loads(subprocess.check_output(shlex.split(args)))
+        tc = TelemetryClient(instrumentation_key)
+        for metric in metric_list:
+            tc.track_metric(metric, 0)
+            tc.flush()
+        daemon_run(host='0.0.0.0', port=80)
 #run(host='0.0.0.0', port=80, debug=True)

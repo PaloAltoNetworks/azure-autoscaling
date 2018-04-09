@@ -347,7 +347,7 @@
             "typeHandlerVersion": "2.0",
             "settings": {
                "fileUris": ["https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py"],
-               "commandToExecute": "apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon && python node_worker.py"
+               "commandToExecute": "apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py"
            }
       }
     },
