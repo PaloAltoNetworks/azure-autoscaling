@@ -253,9 +253,8 @@ def index():
             sys.exit(0)
     
        return "<h1>Hello World!</h1>"
-    else:
-       ##SCALE IN
-       if 'operation' in data and data['operation'] == 'Scale In':
+    ##SCALE IN
+    elif  'operation' in data and data['operation'] == 'Scale In':
         resource_id = data['context']['resourceId']
         rg_name = data['context']['resourceGroupName']
         vmss_name = data['context']['resourceName'] 
