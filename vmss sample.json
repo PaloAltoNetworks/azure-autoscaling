@@ -33,7 +33,7 @@
     "vmssName": {
       "type": "string",
       "metadata": {
-        "description": "String used as a base for naming resources. Must be 3-57 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+        "description": "Name for your VMSS"
       },
       "maxLength": 57
     },
@@ -48,7 +48,7 @@
           "description": "PAN OS Version"
        }
     },
-    "ILBaddress": {
+    "ILBAddress": {
       "type": "string",
       "metadata": {
         "description": "IP Address of Internal Load Balancer"
@@ -87,7 +87,7 @@
               "description": "File Share containing bootstrap file"
             }
       },
-    "api_key": {
+    "ApiKey": {
              "type": "string",
              "metadata":{
                 "description": "API key for firewall"
@@ -123,9 +123,8 @@
     },
     "appInsights": {
              "type" : "string",
-             "defaultValue": "CREATE_NEW_APP_INSIGHTS_AND_ENTER_NAME_HERE", 
              "metadata": {
-                   "description": "Enter the name of your existing Application Insights environment that will be used to receive custom metrics. Instrumetation key needs to be added to bootstrap xml"
+                   "description": "Enter the name for your  Application Insights environment"
         }
     },
     "StorageAccountName": {
@@ -133,6 +132,24 @@
       "metadata": {
         "description": "This is the name of the your storage account. Enter up to 20 characters"
       }
+  },
+  "ServicePrincipal": {
+    "type": "string",
+    "metadata": {
+      "description": "Service Principal"
+    }
+  },
+  "ClientSecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Client Secret"
+      }
+  },
+  "TenantId":{
+    "type": "string",
+    "metadata": {
+      "description": "Tenant ID"
+    }
   }
 },
   "variables": {
@@ -173,9 +190,9 @@
     "appGwBePoolName": "[concat(variables('namingInfix'), 'appGwBepool')]",
     "computeApiVersion": "2017-03-30",
     "networkApiVersion": "2017-06-01",
-    "appInsightsApiVersion": "2015-04-01", 
+    "appInsightsApiVersion": "2015-05-01", 
     "appInsightsComponentsApiVersion": "2015-05-01",
-    "appInsightsName": "[replace(split(parameters('appInsights'), ':')[0], 'CREATE_NEW_APP_INSIGHTS_AND_ENTER_NAME_HERE', concat(deployment().name, '-appinsights'))]", 
+    "appInsightsName": "[concat(parameters('appInsights), '-appinsights'))]", 
     "appInsightsNameArray": "[split(concat(variables('appInsightsName'), ';', variables('resourceGroupName')) , ';')]", 
     "autoScaleMetric": "[parameters('autoScaleMetric')]", 
      "scaleMetricMap": {
@@ -200,7 +217,8 @@
           "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
       }       
     },     
-    "customData": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]"
+    "customData": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
+    "worker-node-name": "[concat(variables('namingInfix'), 'worker-node')]"
   },
   "resources": [
     {
@@ -211,6 +229,15 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
         "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "name": "[variables('appInsightsName')]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "[variables('appInsightsApiVersion')",
+      "location": "[resourceGroup().location]",
+      "properties": {
+          "applicationId": "[variables('appInsightsName')]"
       }
     },
     {
@@ -294,9 +321,12 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "worker-node",
+      "name": "[variables('worker-node-name')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [],
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))",
+        "[concat('Microsoft.Insights/components/', variables('appInsightsName'))" 
+      ],
       "properties": {
           "hardwareProfile": {
               "vmSize": "Standard_A1"
@@ -333,12 +363,12 @@
       }
     },
     {
-      "name": "[concat('worker-node','/vm-customscript')]",
+      "name": "[concat(variables('worker-node-name'),'/vm-customscript')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', 'worker-node')]"
+          "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name')]"
       ],
       "properties":
        {
@@ -347,7 +377,7 @@
             "typeHandlerVersion": "2.0",
             "settings": {
                "fileUris": ["https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py"],
-               "commandToExecute": "apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py"
+               "commandToExecute": "[concat('apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), '[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey]']"
            }
       }
     },
@@ -569,6 +599,10 @@
         "location": "[resourceGroup().location]",
         "tags": {},
         "scale": null,
+        "dependsOn": [
+          "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'), '/extensions/vm-customscript')]",
+          "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+        ],
         "properties": {
             "profiles": [
                 {
@@ -631,10 +665,6 @@
                 "webhooks": [
                     {
                         "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']",
-                        "properties": {
-                          "api-key" : "[variables('api_key')]",
-                          "ilb-address": "[variables('ILBaddress')]"
-                        }
                     }
                 ]
             }
@@ -642,10 +672,7 @@
             "enabled": true,
             "name": "[variables('autoscaleName')]",
             "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
-        },
-        "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
-        ]
+        }
     }
   ]
 }

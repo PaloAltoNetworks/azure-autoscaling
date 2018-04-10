@@ -21,19 +21,30 @@ from applicationinsights import TelemetryClient
 #   Need to update this with a serive principal etc.
 #   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
 #   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
-# ---- ADDED STUB
-
+# ---- DONE
+#
 #2. Figure out the application insighits piece
 #   https://docs.microsoft.com/en-us/azure/monitoring-and-diagnostics/monitoring-enable-alerts-using-template
 #   Seems like there might be a way to do custom metrics
 #   https://github.com/F5Networks/f5-azure-arm-templates/blob/master/supported/solutions/autoscale/waf/existing_stack/PAYG/azuredeploy.json
-# -- ADDED STUB
-
+# -- DONE
+#
 #3. The worker node can be launched as part of the template with a custom script extension to launch the script
 #   So in this case can VMSS notification URL be http://{ref private ip}
-# -- MOSTLY DONE...NEED TO PASS IN CMD LINE PARAMS
+# -- DONE
+#
+# 4. Need to figure out what VMSS has during scale in event. Then delete instance id from instance_list 
+# -- NOT STARTED
+# 
+# 5. Need to push instrumentation key into fw and then commit
+# -- NOT STARTED
+#
+# 6. Use Azure Table Storage for storing the current fw instance list?
+#
+#7. Launch Panorama as part of template and then push panorama ip to firewall
+#   @Scale in event, ask panoram ato delicense the firewall that scaled in
+# -- NOT STARTED
 
-# 4. Use Azure Table Storage for storing the current fw instance list?
 
 LOG_FILENAME = 'azure-autoscaling.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
@@ -43,7 +54,6 @@ logger.setLevel(logging.INFO)
 
 instance_list = collections.defaultdict(list)
 instance_id = ""
-fw_ip = list()
 fw_untrust_ip = list()
 scaled_fw_ip = "1.1.1.1"
 scaled_fw_untrust_ip = "2.2.2.2"
@@ -197,7 +207,6 @@ def check_job_status(ip_to_monitor, job_id):
 @route('/', method='POST')
 def index():
     global fw_untrust_ip
-    global fw_ip
     global instance_id
     ip = ""
     u_ip = ""
@@ -261,7 +270,7 @@ def index():
             #logger.error("[NAT Address RESPONSE]: {}".format(e))
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
-
+       
        cmd="https://"+scaled_fw_ip+"/api/?type=commit&cmd=<commit></commit>&key="+api_key
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
@@ -283,6 +292,18 @@ def index():
 
     # The following lines will call the BottleDaemon script and launch a daemon in the background.
     if __name__ == "__main__":
+        global service_principal
+        global client_password
+        global tenant_id
+        global instrumentation_key
+        global ilb_ip
+        global api_key
+        service_principal = sys.argv[1]
+        client_password = sys.argv[2]
+        tenant_id = sys.argv[3]
+        api_key = sys.argv[4]
+        ilb_ip = sys.argv[5]
+        instrumentation_key = sys.argv[6]
         args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
         y = json.loads(subprocess.check_output(shlex.split(args)))
         tc = TelemetryClient(instrumentation_key)
