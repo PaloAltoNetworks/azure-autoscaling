@@ -664,7 +664,7 @@
                 },
                 "webhooks": [
                     {
-                        "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']",
+                        "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']"
                     }
                 ]
             }
