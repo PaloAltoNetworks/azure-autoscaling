@@ -154,7 +154,7 @@
 },
   "variables": {
     "resourceGroupName": "[resourceGroup().name]", 
-    "namingInfix": "[toLower(substring(concat(parameters('vmssName'), uniqueString(resourceGroup().id)), 0, 5))]",
+    "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
     "strAccountName": "[concat(parameters('StorageAccountName'),variables('namingInfix'))]",
     "longNamingInfix": "[toLower(parameters('vmssName'))]",
     "imagePublisher": "paloaltonetworks",
@@ -192,7 +192,7 @@
     "networkApiVersion": "2017-06-01",
     "appInsightsApiVersion": "2015-05-01", 
     "appInsightsComponentsApiVersion": "2015-05-01",
-    "appInsightsName": "[concat(parameters('appInsights), '-appinsights'))]", 
+    "appInsightsName": "[concat(parameters('appInsights'), variables('namingInfix'))]", 
     "appInsightsNameArray": "[split(concat(variables('appInsightsName'), ';', variables('resourceGroupName')) , ';')]", 
     "autoScaleMetric": "[parameters('autoScaleMetric')]", 
      "scaleMetricMap": {
@@ -217,7 +217,7 @@
           "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
       }       
     },     
-    "customData": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
+    "CustomDataField": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
     "worker-node-name": "[concat(variables('namingInfix'), 'worker-node')]"
   },
   "resources": [
@@ -227,17 +227,18 @@
       "type": "Microsoft.Storage/storageAccounts",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('networkApiVersion')]",
-      "properties": {
-        "accountType": "Standard_LRS"
+      "sku": {
+        "name": "Standard_LRS"
       }
     },
     {
       "name": "[variables('appInsightsName')]",
       "type": "Microsoft.Insights/components",
+      "kind": "web",
       "apiVersion": "[variables('appInsightsApiVersion')",
       "location": "[resourceGroup().location]",
       "properties": {
-          "applicationId": "[variables('appInsightsName')]"
+          "Application_Type": "web"
       }
     },
     {
@@ -324,8 +325,8 @@
       "name": "[variables('worker-node-name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))",
-        "[concat('Microsoft.Insights/components/', variables('appInsightsName'))" 
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[concat('Microsoft.Insights/components/', variables('appInsightsName'))]" 
       ],
       "properties": {
           "hardwareProfile": {
@@ -368,7 +369,7 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name')]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'))]"
       ],
       "properties":
        {
@@ -377,7 +378,7 @@
             "typeHandlerVersion": "2.0",
             "settings": {
                "fileUris": ["https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py"],
-               "commandToExecute": "[concat('apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), '[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey]']"
+               "commandToExecute": "concat('apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), variables('appInsightsName'), variables('resourceGroupName')"
            }
       }
     },
@@ -529,7 +530,7 @@
             "computerNamePrefix": "[variables('namingInfix')]",
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]",
-            "customData": "[base64(parameters('customData'))]"
+            "customData": "[base64(variables('CustomDataField'))]"
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [

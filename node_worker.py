@@ -68,6 +68,8 @@ service_principal = 'service_principal'
 tenant_id = 'tenant_id'
 client_password = 'client_secret'
 instrumentation_key = 'instrumentation-key'
+appinsights_name = 'appinsights_name'
+rg_name = 'rg_name'
 
 
 def check_fw_up(ip_to_monitor):
@@ -298,14 +300,20 @@ def index():
         global instrumentation_key
         global ilb_ip
         global api_key
+        global appinsights_name
+        global rg_name
         service_principal = sys.argv[1]
         client_password = sys.argv[2]
         tenant_id = sys.argv[3]
         api_key = sys.argv[4]
         ilb_ip = sys.argv[5]
-        instrumentation_key = sys.argv[6]
+        appinsights_name = sys.argv[6]
+        rg_name = sys.argv[7]
         args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
         y = json.loads(subprocess.check_output(shlex.split(args)))
+        #SOME ERROR CHECKING HERE?
+        args = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query "properties.InstrumentationKey"'
+        instrumentation_key = subprocess.check_output(shlex.split(args))
         tc = TelemetryClient(instrumentation_key)
         for metric in metric_list:
             tc.track_metric(metric, 0)
