@@ -368,6 +368,7 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
+          "[concat('Microsoft.Insights/components', variables('appInsightsName'))]",
           "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name')]"
       ],
       "properties":
