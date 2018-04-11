@@ -55,10 +55,10 @@ logger.setLevel(logging.INFO)
 instance_list = collections.defaultdict(list)
 instance_id = ""
 fw_untrust_ip = list()
-scaled_fw_ip = "1.1.1.1"
-scaled_fw_untrust_ip = "2.2.2.2"
-ilb_ip = "3.3.3.3"
-api_key = "some api key"
+scaled_fw_ip = ""
+scaled_fw_untrust_ip = ""
+ilb_ip = ""
+api_key = ""
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 
 metric_list = ("DataPlaneCPUUtilizationPct", "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
