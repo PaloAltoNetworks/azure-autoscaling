@@ -14,6 +14,7 @@ import logging
 import sys
 import collections
 import itertools
+import time
 from applicationinsights import TelemetryClient
 
 #TO DO
@@ -321,6 +322,8 @@ def main():
         tc = TelemetryClient(instrumentation_key)
         for metric in metric_list:
             tc.track_metric(metric, 0)
+            tc.flush()
+            time.sleep(60)
             tc.flush()
         #app.daemon_run(host='0.0.0.0', port=80)
         app.run(host='0.0.0.0', port=80, debug=True)
