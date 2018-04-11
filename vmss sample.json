@@ -383,7 +383,7 @@
                  "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py",
                  "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/start.sh"
               ],
-               "commandToExecute": "concat('sh start.sh '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), variables('appInsightsName'), variables('resourceGroupName')"
+               "commandToExecute": "concat('apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py ', parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), variables('appInsightsName'), variables('resourceGroupName'))"
            }
       }
     },
