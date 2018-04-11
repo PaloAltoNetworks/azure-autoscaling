@@ -175,6 +175,7 @@
     "nicNameMgmt": "[concat('nicmgmt', variables('namingInfix'))]",
     "nicNameUntrust": "[concat('nicuntrust', variables('namingInfix'))]",
     "nicNameTrust": "[concat('nictrust', variables('namingInfix'))]",
+    "nicNameWorker": "[concat ('wrokernic', variables('namingInfix'))]",
     "ipConfigNameuntrust": "[concat('ipconfiguntrust', variables('namingInfix'))]",
     "ipConfigNametrust": "[concat('ipconfigtrust', variables('namingInfix'))]",
     "ipConfigNamemgmt": "[concat('ipconfigmgmt', variables('namingInfix'))]",
@@ -295,14 +296,14 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "worker-eth-0",
+      "name": "[variables('nicNameWorker')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
           "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
           "[concat('Microsoft.Network/publicIPAddresses/', variables('WorkerPublicIPAddressName'))]"
       ],
       "tags": {
-        "displayName": "worker-node-eth0]"
+        "displayName": "[variables('nicNameWorker')]"
       },
       "properties": {
         "ipConfigurations": [
@@ -670,7 +671,7 @@
                 },
                 "webhooks": [
                     {
-                        "serviceUri": "concat['http://', 'variables('WorkerPrivateIPAddress')']"
+                        "serviceUri": "concat['http://', 'reference(concat(variables('nicNameWorker'),0)).ipConfigurations[0].properties.privateIPAddress']"
                     }
                 ]
             }
