@@ -303,6 +303,7 @@ def main():
         global api_key
         global appinsights_name
         global rg_name
+        global app
         service_principal = sys.argv[1]
         client_password = sys.argv[2]
         tenant_id = sys.argv[3]
