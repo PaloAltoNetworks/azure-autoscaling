@@ -3,7 +3,7 @@
 import json
 import subprocess
 from bottle import request, run, route, Bottle
-#from bottledaemon import daemon_run
+from bottledaemon import daemon_run
 import shlex
 import urllib2
 import xml.etree.ElementTree as et
@@ -310,18 +310,20 @@ def main():
         appinsights_name = sys.argv[6]
         rg_name = sys.argv[7]
         args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
+        logger.info("[INFO]: Seding az login command {}".format(args))
         y = json.loads(subprocess.check_output(shlex.split(args)))
+        logger.info("[INFO]: output of az login {}".format(y))
         #SOME ERROR CHECKING HERE?
         args = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query "properties.InstrumentationKey"'
+        logger.info("[INFO]: Seding az login command {}".format(args))
         instrumentation_key = subprocess.check_output(shlex.split(args))
+        logger.info("[INFO]: output of az login {}".format(instrumentation_key))
         tc = TelemetryClient(instrumentation_key)
         for metric in metric_list:
             tc.track_metric(metric, 0)
             tc.flush()
-        #@app.daemon_run(host='0.0.0.0', port=80)
+        #app.daemon_run(host='0.0.0.0', port=80)
         app.run(host='0.0.0.0', port=80, debug=True)
-
-
 
 if __name__ == "__main__":
         main()
