@@ -158,7 +158,7 @@
     "resourceGroupName": "[resourceGroup().name]", 
     "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
     "strAccountName": "[concat('storage',variables('namingInfix'))]",
-    "longNamingInfix": "[toLower(parameters('vmssName'))]",
+    "vmssName": "[concat(parameters('vmssName'), variables('namingInfix'))]",
     "imagePublisher": "paloaltonetworks",
     "imageOffer" : "vmseries1",
     "addressPrefix": "10.0.0.0/16",
@@ -491,7 +491,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[concat(parameters('vmssName'), variables('namingInfix'))]",
+      "name": "[variables('vmssName')]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2017-03-30",
       "dependsOn": [
@@ -608,7 +608,7 @@
         "scale": null,
         "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'), '/extensions/vm-customscript')]",
-          "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+          "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vmssName'))]"
         ],
         "properties": {
             "profiles": [
@@ -678,7 +678,7 @@
         ],
             "enabled": true,
             "name": "[variables('autoscaleName')]",
-            "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+            "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vmssName'))]"
         }
     }
   ]
