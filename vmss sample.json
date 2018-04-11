@@ -44,6 +44,7 @@
           "8.1.0",
           "8.0.0"
        ],
+       "defaultValue": "latest",
        "metadata": {
           "description": "PAN OS Version"
        }
@@ -57,14 +58,14 @@
     },
     "adminUsername": {
       "type": "string",
-      "defaultValue": "azureadmin",
+      "defaultValue": "paloalto",
       "metadata": {
         "description": "Admin username on all VMs."
       }
     },
     "adminPassword": {
       "type": "securestring",
-      "defaultValue": "azure@dmin123",
+      "defaultValue": "Pal0Alt0@123",
       "metadata": {
         "description": "Admin password on all VMs."
       }
@@ -73,25 +74,29 @@
             "type": "string",
             "metadata":{
               "description": "Name of storage account for bootstrap"
-            }
+            },
+            "defaultValue": "narayanazbootstrap"
       },
     "customaccesskey": {
-            "type": "string",
+            "type": "securestring",
             "metadata":{
               "description": "Storage account access key to read blob data privately"
-            }
+            },
+            "defaultValue": "Y828hks6q2Xn72WWOfI4IgNfaAFfZxPnyiiPaldVQF+PNuZTLJe3F3VHA/vgtLEksbdmbUIuGY6Ta7y6qFrDsg=="
       },
     "customfileshare": {
             "type": "string",
             "metadata":{
               "description": "File Share containing bootstrap file"
-            }
+            },
+            "defaultValue": "narayanazbsfileshare"
       },
     "ApiKey": {
-             "type": "string",
+             "type": "securestring",
              "metadata":{
                 "description": "API key for firewall"
-             }
+             },
+             "defaultValue": "LUFRPT1CU0dMRHIrOWFET0JUNzNaTmRoYmkwdjBkWWM9alUvUjBFTTNEQm93Vmx0OVhFRlNkOXdJNmVwYWk5Zmw4bEs3NjgwMkh5QT0="
     },
     "vmScaleSetMinCount": {
       "type": "int",
@@ -127,26 +132,23 @@
                    "description": "Enter the name for your  Application Insights environment"
         }
     },
-    "StorageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "This is the name of the your storage account. Enter up to 20 characters"
-      }
-  },
   "ServicePrincipal": {
     "type": "string",
     "metadata": {
       "description": "Service Principal"
-    }
+    },
+    "defaultValue": "https://vm-monitor.azurewebsites.net"
   },
   "ClientSecret": {
       "type": "securestring",
       "metadata": {
         "description": "Client Secret"
-      }
+      },
+      "defaultValue": "bkIsLtSfHuimzejN+69q537jqHUuQY5un69WyHmgRGc="
   },
   "TenantId":{
     "type": "string",
+    "defaultValue": "66b66353-3b76-4e41-9dc3-fee328bd400e",
     "metadata": {
       "description": "Tenant ID"
     }
@@ -155,7 +157,7 @@
   "variables": {
     "resourceGroupName": "[resourceGroup().name]", 
     "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
-    "strAccountName": "[concat(parameters('StorageAccountName'),variables('namingInfix'))]",
+    "strAccountName": "[concat(variables('namingInfix'), 'storage')]",
     "longNamingInfix": "[toLower(parameters('vmssName'))]",
     "imagePublisher": "paloaltonetworks",
     "imageOffer" : "vmseries1",
@@ -235,7 +237,7 @@
       "name": "[variables('appInsightsName')]",
       "type": "Microsoft.Insights/components",
       "kind": "web",
-      "apiVersion": "[variables('appInsightsApiVersion')",
+      "apiVersion": "[variables('appInsightsApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
           "Application_Type": "web"
@@ -320,7 +322,7 @@
       }
     },    
     {
-      "apiVersion": "[variables('networkApiVersion')]",
+      "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('worker-node-name')]",
       "location": "[resourceGroup().location]",
@@ -334,8 +336,8 @@
           },
           "osProfile": {
               "computername": "worker-vm",
-              "adminUsername": "[variables('adminUsername')]",
-              "adminPassword": "[variables('adminPassword')]"
+              "adminUsername": "[parameters('adminUsername')]",
+              "adminPassword": "[parameters('adminPassword')]"
           },
           "storageProfile": {
              "imageReference": {
@@ -366,7 +368,7 @@
     {
       "name": "[concat(variables('worker-node-name'),'/vm-customscript')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "[variables('networkApiVersion')]",
+      "apiVersion": "[variables('computeApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'))]"
@@ -377,8 +379,11 @@
             "type": "CustomScript",
             "typeHandlerVersion": "2.0",
             "settings": {
-               "fileUris": ["https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py"],
-               "commandToExecute": "concat('apt-get -y update && apt-get install -y python-pip && pip install azure-cli bottle bottledaemon applicationinsights && python node_worker.py '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), variables('appInsightsName'), variables('resourceGroupName')"
+               "fileUris": [
+                 "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py",
+                 "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/start.sh"
+              ],
+               "commandToExecute": "concat('sh start.sh '), parameters('ServicePrincipal'), parameters('ClientSecret'), parameters('TenantId'), parameters('ApiKey'), parameters('ILBAddress'), variables('appInsightsName'), variables('resourceGroupName')"
            }
       }
     },
