@@ -168,7 +168,7 @@
     "WorkerPrivateIPAddress": "10.0.10.5",
     "virtualNetworkName": "[concat('vnet', variables('namingInfix'))]",
     "publicIPAddressName": "[concat('pip', variables('namingInfix'))]",
-    "autoscaleName": "[concat('autoscale-', variables('namingInfix'))]",
+    "autoscaleName": "[concat('autoscale', variables('namingInfix'))]",
     "subnetNameUntrust": "[concat('subnetuntrust', variables('namingInfix'))]",
     "subnetNameTrust": "[concat('subnettrust', variables('namingInfix'))]",
     "subnetNameMgmt": "[concat('subnetmgmt', variables('namingInfix'))]",
@@ -491,7 +491,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[variables('namingInfix')]",
+      "name": "[concat(parameters('vmssName'), variables('namingInfix'))]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2017-03-30",
       "dependsOn": [
