@@ -2,8 +2,8 @@
 
 import json
 import subprocess
-from bottle import request, run, route
-from bottledaemon import daemon_run
+from bottle import request, run, route, Bottle
+#from bottledaemon import daemon_run
 import shlex
 import urllib2
 import xml.etree.ElementTree as et
@@ -46,6 +46,7 @@ from applicationinsights import TelemetryClient
 # -- NOT STARTED
 
 
+app = Bottle()
 LOG_FILENAME = 'azure-autoscaling.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
 logger = logging.getLogger(__name__)
@@ -206,7 +207,7 @@ def check_job_status(ip_to_monitor, job_id):
                         else:
                             return 'pending'
 
-@route('/', method='POST')
+@app.route('/', method='POST')
 def index():
     global fw_untrust_ip
     global instance_id
@@ -291,9 +292,8 @@ def index():
         ##NEED TO REMOVE THE INSTANCE THAT GOT SCALED IN...HOW TO FIGURE THAT OUT?
         ##SO WHAT DOES THE vmss cli return?
     return "<h1>Bye Bye World!</h1>"
-
-    # The following lines will call the BottleDaemon script and launch a daemon in the background.
-    if __name__ == "__main__":
+    
+def main():
         global service_principal
         global client_password
         global tenant_id
@@ -318,5 +318,11 @@ def index():
         for metric in metric_list:
             tc.track_metric(metric, 0)
             tc.flush()
-        daemon_run(host='0.0.0.0', port=80)
-#run(host='0.0.0.0', port=80, debug=True)
+        #@app.daemon_run(host='0.0.0.0', port=80)
+        app.run(host='0.0.0.0', port=80, debug=True)
+
+
+
+if __name__ == "__main__":
+        main()
+

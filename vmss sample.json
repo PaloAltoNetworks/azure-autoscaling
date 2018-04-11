@@ -221,7 +221,7 @@
       }       
     },     
     "CustomDataField": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
-    "worker-node-name": "[concat(variables('namingInfix'), 'worker-node')]",
+    "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
     "space": " " 
   },
   "resources": [
@@ -671,7 +671,7 @@
                 },
                 "webhooks": [
                     {
-                        "serviceUri": "concat['http://', 'reference(concat(variables('nicNameWorker'),0)).ipConfigurations[0].properties.privateIPAddress']"
+                      "serviceUri": "[concat('http://', variables('WorkerPrivateIPAddress'))]"
                     }
                 ]
             }
