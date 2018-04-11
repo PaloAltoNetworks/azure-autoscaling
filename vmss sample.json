@@ -360,7 +360,7 @@
           "networkProfile": {
              "networkInterfaces": [
                {
-                 "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('worker-eth-0'))]",
+                 "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicNameWorker'))]",
                  "properties": { "primary": true}
                }
              ]
