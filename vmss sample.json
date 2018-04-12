@@ -146,7 +146,7 @@
       "metadata": {
         "description": "Client Secret"
       },
-      "defaultValue": "bkIsLtSfHuimzejN+69q537jqHUuQY5un69WyHmgRGc="
+      "defaultValue": "Fs6xEUZ5RHsl6Xpk97Me3Uk2RWpNOWF//tGMLmzy99I="
   },
   "TenantId":{
     "type": "string",

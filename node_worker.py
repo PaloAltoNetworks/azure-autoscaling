@@ -320,11 +320,17 @@ def main():
         logger.info("[INFO]: Seding az login command {}".format(args))
         instrumentation_key = subprocess.check_output(shlex.split(args))
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
+        print instrumentation_key
+        logger.info("[INFO]: publishing metric list {}".format(metric_list))
         tc = TelemetryClient(instrumentation_key)
         for metric in metric_list:
             tc.track_metric(metric, 0)
             tc.flush()
-            time.sleep(60)
+        time.sleep(180)
+        #Do it again?
+        for metric in metric_list:
+            tc.track_metric(metric, 0)
+            tc.flush()
             tc.flush()
         #app.daemon_run(host='0.0.0.0', port=80)
         app.run(host='0.0.0.0', port=80, debug=True)
