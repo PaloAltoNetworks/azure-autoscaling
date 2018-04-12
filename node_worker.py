@@ -64,7 +64,7 @@ ilb_ip = ""
 api_key = ""
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 
-metric_list = ("DataPlaneCPUUtilizationPct", "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
+metric_list = ('DataPlaneCPUUtilizationPct', "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
 
 ##NEED FROM COMMAND LINE OR IN ENVIRONMENT VARIABLE
 service_principal = 'service_principal'
@@ -316,27 +316,26 @@ def main():
         logger.info("[INFO]: Sending az login command {}".format(command))
         process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
         proc_stdout = process.communicate()[0].strip()
-        y = json.loads(proc_stdout)
-        logger.info("[INFO]: output of az login {}".format(y))
-        #SOME ERROR CHECKING HERE?
-        command = 'az account show'
-        out = subprocess.check_output(shlex.split(command))
-        logger.info("[INFO]: account show {}".format(out))
+        #y = json.loads(proc_stdout)
+        logger.info("[INFO]: output of az login {}".format(proc_stdout))
         command = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
         logger.info("[INFO]: Sending az resource show {}".format(command))
         instrumentation_key = subprocess.check_output(shlex.split(command))
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
         logger.info("[INFO]: publishing metric list {}".format(metric_list))
-
+        logger.info(str(instrumentation_key))
+        logger.info(instrumentation_key)
+        tc = TelemetryClient(str(instrumentation_key))
+        time.sleep(100)
         for metric in metric_list:
+            time.sleep(120)
             logger.info("[INFO]: metric {}".format(metric))
-            tc = TelemetryClient(str(instrumentation_key))
-            tc.track_metric(metric, 1)
-            time.sleep(60)
+            tc.track_metric(metric, 0)
+            tc.flush()
             tc.flush()
 
         #app.daemon_run(host='0.0.0.0', port=80)
-        app.run(host='0.0.0.0', port=80, debug=True)
+        app.run(host='0.0.0.0', port=80, debug=True, Threaded=True)
 
 if __name__ == "__main__":
         main()
