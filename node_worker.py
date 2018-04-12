@@ -225,20 +225,32 @@ def index():
        resource_id = data['context']['resourceId']
        rg_name = data['context']['resourceGroupName']
        vmss_name = data['context']['resourceName'] 
-       args = 'az vmss list-instances --ids '+resource_id
+       args = 'az vmss list-instances --ids ' + resource_id
        x = json.loads(subprocess.check_output(shlex.split(args)))
        for i in x:
            if i['instanceId'] not in instance_list:
-               instance_id = i['instanceId']
-               logger.info("[INFO]: Instance ID: {}".format(instance_id))
-               args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
-               y = json.loads(subprocess.check_output(shlex.split(args)))
-               instance_list[instance_id].append({'mgmt-ip': y[0]['ipConfigurations'][0]['privateIpAddress']})
-               instance_list[instance_id].append({'untrust-ip': y[0]['ipConfigurations'][1]['privateIpAddress']})
-               logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
-               logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
+                instance_id = i['instanceId']
+                logger.info("[INFO]: Instance ID: {}".format(instance_id))
+                args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
+                logger.info("[INFO] vmss nic list {}".format(args))
+                try:
+                   y = json.loads(subprocess.check_output(shlex.split(args)))
+                   logger.info(y)
+                except Exception, e:
+                    logger.info("[ERROR]: vmss nic list-vms error {}".format(e))
+                    #while (True):
+                    #    logger.info("[INFO]: Polling to get ip addresses")
+                    #    args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
+                #else:
+                #    continue #Not the ip address we are looking for?
+                logger.info(y[0]['ipConfigurations'][0]['privateIpAddress'])
+                logger.info(y[0]['ipConfigurations'][1]['privateIpAddress'])
+                instance_list[instance_id].append({'mgmt-ip': y[0]['ipConfigurations'][0]['privateIpAddress']})
+                instance_list[instance_id].append({'untrust-ip': y[0]['ipConfigurations'][1]['privateIpAddress']})
+                logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
+                logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
            else:
-               continue 
+                continue 
        scaled_fw_ip = instance_list[instance_id]['mgmt-ip']
        scaled_fw_untrust_ip = instance_list[instance_id]['untrust-ip']
        err = 'no'
@@ -363,7 +375,7 @@ def main():
         #    time.sleep(10)
 
         #app.daemon_run(host='0.0.0.0', port=80)
-        app.run(host='0.0.0.0', port=80, debug=True, Threaded=True)
+        app.run(host='0.0.0.0', port=80)
 
 if __name__ == "__main__":
         main()

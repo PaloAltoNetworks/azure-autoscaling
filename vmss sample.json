@@ -225,7 +225,7 @@
     "CustomDataField": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
     "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
     "space": " ",
-    "workerDnsLabel": "[concat('worker', variables('namingInfix')]"
+    "workerDnsLabel": "[concat('worker', variables('namingInfix'))]"
   },
   "resources": [
     {
@@ -293,7 +293,10 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('networkApiVersion')]",
       "properties": {
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('workerDnsLabel')]"
+        }
       }
     },
     {
@@ -317,9 +320,6 @@
               "privateIPAddress": "[variables('WorkerPrivateIPAddress')]",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerPublicIPAddressName'))]"
-              },
-              "dnsSettings": {
-                "domainNameLabel": "[variables('workerDnsLabel')]"
               },
               "subnet": {
                 "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetNameMgmt'))]"
@@ -678,7 +678,7 @@
                 },
                 "webhooks": [
                     {
-                      "serviceUri": "[concat('http://', variables('workerDnsLabel')]"
+                      "serviceUri": "[concat('http://', variables('workerDnsLabel'),'.',[resourceGroup().location],'.cloudapp.azure.com')]"
                     }
                 ]
             }
