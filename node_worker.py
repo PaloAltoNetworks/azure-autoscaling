@@ -312,12 +312,12 @@ def main():
         appinsights_name = sys.argv[6]
         rg_name = sys.argv[7]
         args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
-        logger.info("[INFO]: Seding az login command {}".format(args))
+        logger.info("[INFO]: Sending az login command {}".format(args))
         y = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: output of az login {}".format(y))
         #SOME ERROR CHECKING HERE?
-        args = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query "properties.InstrumentationKey"'
-        logger.info("[INFO]: Seding az login command {}".format(args))
+        args = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
+        logger.info("[INFO]: Sending az resource show {}".format(args))
         instrumentation_key = subprocess.check_output(shlex.split(args))
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
         print instrumentation_key
