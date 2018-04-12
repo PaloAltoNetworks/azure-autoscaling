@@ -387,7 +387,7 @@
                  "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/node_worker.py",
                  "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/start.sh"
               ],
-               "commandToExecute": "[concat('./start.sh ', variables('space'), parameters('ServicePrincipal'), variables('space'), parameters('ClientSecret'), variables('space') ,parameters('TenantId'), variables('space') , parameters('ApiKey'), variables('space'), parameters('ILBAddress'), variables('space'), variables('appInsightsName'), variables('space'), variables('resourceGroupName'), '&')]"
+               "commandToExecute": "[concat('/bin/bash ./start.sh ', variables('space'), parameters('ServicePrincipal'), variables('space'), parameters('ClientSecret'), variables('space') ,parameters('TenantId'), variables('space') , parameters('ApiKey'), variables('space'), parameters('ILBAddress'), variables('space'), variables('appInsightsName'), variables('space'), variables('resourceGroupName'), '&')]"
            }
       }
     },
