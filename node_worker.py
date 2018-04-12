@@ -320,12 +320,12 @@ def main():
         logger.info("[INFO]: output of az login {}".format(proc_stdout))
         command = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
         logger.info("[INFO]: Sending az resource show {}".format(command))
-        instrumentation_key = subprocess.check_output(shlex.split(command)).strip()
+        instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
         logger.info("[INFO]: publishing metric list {}".format(metric_list))
         #logger.info(str(instrumentation_key))
         #logger.info(instrumentation_key)
-        tc = TelemetryClient(instrumentation_key)
+        tc = TelemetryClient(instrumentation_key.rstrip())
         #time.sleep(100)
         for metric in metric_list:
             logger.info("[INFO]: metric {}".format(metric))
