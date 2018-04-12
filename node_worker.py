@@ -329,6 +329,7 @@ def main():
         time.sleep(180)
         #Do it again?
         for metric in metric_list:
+            logger.info("[INFO]: metric {}".format(metric))
             tc.track_metric(metric, 0)
             tc.flush()
             tc.flush()
