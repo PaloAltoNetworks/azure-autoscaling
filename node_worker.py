@@ -326,12 +326,11 @@ def main():
         logger.info("[INFO]: Sending az resource show {}".format(command))
         instrumentation_key = subprocess.check_output(shlex.split(command))
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
-        logger.info(instrumentation_key.replace('"', ''))
         logger.info("[INFO]: publishing metric list {}".format(metric_list))
 
         for metric in metric_list:
             logger.info("[INFO]: metric {}".format(metric))
-            tc = TelemetryClient(instrumentation_key.replace('"', ''))
+            tc = TelemetryClient(str(instrumentation_key))
             tc.track_metric(metric, 1)
             time.sleep(60)
             tc.flush()
