@@ -15,6 +15,7 @@ import sys
 import collections
 import itertools
 import time
+import os
 from applicationinsights import TelemetryClient
 
 #TO DO
@@ -311,28 +312,27 @@ def main():
         ilb_ip = sys.argv[5]
         appinsights_name = sys.argv[6]
         rg_name = sys.argv[7]
-        args = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
-        logger.info("[INFO]: Sending az login command {}".format(args))
-        y = json.loads(subprocess.check_output(shlex.split(args)))
+        command = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
+        logger.info("[INFO]: Sending az login command {}".format(command))
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        y = json.loads(proc_stdout)
         logger.info("[INFO]: output of az login {}".format(y))
         #SOME ERROR CHECKING HERE?
-        args = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
-        logger.info("[INFO]: Sending az resource show {}".format(args))
-        instrumentation_key = subprocess.check_output(shlex.split(args))
+        command = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
+        logger.info("[INFO]: Sending az resource show {}".format(command))
+        instrumentation_key = subprocess.check_output(shlex.split(command))
         logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
-        print instrumentation_key
+        logger.info(instrumentation_key)
         logger.info("[INFO]: publishing metric list {}".format(metric_list))
-        tc = TelemetryClient(instrumentation_key)
-        for metric in metric_list:
-            tc.track_metric(metric, 0)
-            tc.flush()
-        time.sleep(180)
-        #Do it again?
+
         for metric in metric_list:
             logger.info("[INFO]: metric {}".format(metric))
-            tc.track_metric(metric, 0)
+            tc = TelemetryClient(instrumentation_key)
+            tc.track_metric(metric, 1)
+            time.sleep(60)
             tc.flush()
-            tc.flush()
+
         #app.daemon_run(host='0.0.0.0', port=80)
         app.run(host='0.0.0.0', port=80, debug=True)
 
