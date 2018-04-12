@@ -319,6 +319,9 @@ def main():
         y = json.loads(proc_stdout)
         logger.info("[INFO]: output of az login {}".format(y))
         #SOME ERROR CHECKING HERE?
+        command = 'az account show'
+        out = subprocess.check_output(shlex.split(command))
+        logger.info("[INFO]: account show {}".format(out))
         command = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey'
         logger.info("[INFO]: Sending az resource show {}".format(command))
         instrumentation_key = subprocess.check_output(shlex.split(command))
