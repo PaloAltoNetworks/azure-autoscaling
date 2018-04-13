@@ -217,7 +217,7 @@ def index(postdata):
        x = json.loads(subprocess.check_output(shlex.split(args)))
        logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
-           if i['provisioningState'] is 'Creating': # This is the instance being scaled out
+           if i['provisioningState'] == 'Creating': # This is the instance being scaled out
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
@@ -248,7 +248,7 @@ def index(postdata):
         x = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
-            if i['provisioningSate'] is 'Deleting': #This is the instance being scaled in
+            if i['provisioningSate'] == 'Deleting': #This is the instance being scaled in
                 logger.info("[INFO]: {} is getting scaled in...so poping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
