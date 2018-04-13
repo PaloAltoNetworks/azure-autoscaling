@@ -10,16 +10,11 @@ import logging
 import sys
 import collections
 import itertools
-import os
 import time
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 #TO DO
-#
-# 
-# 2. Need to push instrumentation key into fw and then commit
-# -- NOT STARTED
 #
 # 3. Use Azure Table Storage for storing the current fw instance list?
 #
@@ -36,13 +31,15 @@ logger.setLevel(logging.INFO)
 
 
 instance_list = collections.defaultdict(dict)
-instance_id = ""
+
 scaled_fw_ip = ""
 scaled_fw_untrust_ip = ""
 ilb_ip = ""
 api_key = ""
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 instrumentation_key = ""
+
+
 
 def check_fw_up(ip_to_monitor):
     global gcontext
@@ -202,13 +199,11 @@ class ServerHandler(BaseHTTPRequestHandler):
 def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
         server_address = ('0.0.0.0', port)
         httpd = server_class(server_address, handler_class)
-        print 'Starting httpd...'
+        logger.info("[INFO]: Starting httpd...")
         httpd.serve_forever()
 
 
 def index(postdata):
-    global instance_id
-
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
 
@@ -325,18 +320,28 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
     
     
-def worker(api, ilb, key):
+def main():
         global ilb_ip
         global api_key 
         global instrumentaion_key 
-        api_key = api
-        ilb_ip = ilb
-        instrumentation_key = key
+
+        api_key = sys.argv[4]
+        ilb_ip = sys.argv[5]
+       
+        command = 'az login --service-principal -u ' + sys.argv[1] + ' -p ' + sys.argv[2] + ' --tenant ' + sys.argv[3] 
+        logger.info("[INFO]: Logging in {}".format(command))
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        proc_stdout = process.communicate()[0].strip()
+        logger.info("[INFO]: output of az login {}".format(proc_stdout))
+        command = 'az resource show -g ' + sys.argv[7] + ' --resource-type microsoft.insights/components -n ' + sys.argv[6] + ' --query properties.InstrumentationKey -o tsv'
+        logger.info("[INFO]: Show resources {}".format(command))
+        instrumentaion_key = subprocess.check_output(shlex.split(command)).rstrip()
+        logger.info("[INFO]: Instrumentation Key {}".format(instrumentaion_key))
         run()
         #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
         while threading.active_count() > 0:
             time.sleep(1)
 
-#if __name__ == "__main__":
-#        main()
+if __name__ == "__main__":
+        main()
 
