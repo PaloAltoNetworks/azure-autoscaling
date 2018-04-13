@@ -248,7 +248,7 @@ def index(postdata):
         x = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
-            if i['provisioningSate'] == 'Deleting': #This is the instance being scaled in
+            if i['provisioningState'] == 'Deleting': #This is the instance being scaled in
                 logger.info("[INFO]: {} is getting scaled in...so poping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
