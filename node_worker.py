@@ -17,8 +17,6 @@ import threading
 
 #TO DO
 #
-# 1. Need to figure out what VMSS has during scale in event. Then delete instance id from instance_list 
-# -- NOT STARTED
 # 
 # 2. Need to push instrumentation key into fw and then commit
 # -- NOT STARTED
@@ -44,6 +42,7 @@ scaled_fw_untrust_ip = ""
 ilb_ip = ""
 api_key = ""
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+instrumentation_key = ""
 
 def check_fw_up(ip_to_monitor):
     global gcontext
@@ -210,9 +209,6 @@ def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
 def index(postdata):
     global instance_id
 
-    ip = ""
-    u_ip = ""
-    #postdata = request.body.read()
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
 
@@ -222,30 +218,20 @@ def index(postdata):
        rg_name = data['context']['resourceGroupName']
        vmss_name = data['context']['resourceName'] 
        args = 'az vmss list-instances --ids ' + resource_id
+       logger.info("[INFO]: List instances: {}".format(args))
        x = json.loads(subprocess.check_output(shlex.split(args)))
+       logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
-           if i['instanceId'] not in instance_list:
+           if i['provisioningState'] is 'Creating': # This is the instance being scaled out
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
                 logger.info("[INFO] vmss nic list {}".format(args))
-                try:
-                   y = json.loads(subprocess.check_output(shlex.split(args)))
-                except Exception as e:
-                    logger.info("[ERROR]: vmss nic list-vms error {}".format(e))
-                    #while (True):
-                    #    logger.info("[INFO]: Polling to get ip addresses")
-                    #    args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
-                #else:
-                #    continue #Not the ip address we are looking for?
-                ip = y[0]['ipConfigurations'][0]['privateIpAddress']
-                instance_list[instance_id]['mgmt-ip'] = ip
-                logger.info("[INFO]: ipconfig[0] {}".format(ip))
-
-                ip = y[1]['ipConfigurations'][0]['privateIpAddress']
-                instance_list[instance_id]['untrust-ip'] =  ip
-                logger.info("[INFO]: ipconfig[1] {}".format(ip))
-                
+                #WILL I GET THE NIC LIST ALL THE TIME? OR IS THERE A RACE?
+                y = json.loads(subprocess.check_output(shlex.split(args)))
+                instance_list[instance_id]['mgmt-ip'] = y[0]['ipConfigurations'][0]['privateIpAddress']
+                instance_list[instance_id]['untrust-ip'] = y[1]['ipConfigurations'][0]['privateIpAddress']
+              
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
            else:
@@ -263,14 +249,22 @@ def index(postdata):
         rg_name = data['context']['resourceGroupName']
         vmss_name = data['context']['resourceName'] 
         args = 'az vmss list-instances --ids '+resource_id
+        logger.info("[INFO]: List instances: {}".format(args))        
         x = json.loads(subprocess.check_output(shlex.split(args)))
-        logger.info("[INFO]: Scaled in instance ids {}". format(x))
-        ##NEED TO REMOVE THE INSTANCE THAT GOT SCALED IN...HOW TO FIGURE THAT OUT?
-        ##SO WHAT DOES THE vmss cli return?
+        logger.info("[INFO]: SCALE IN list instances output {}". format(x))
+        for i in x:
+            if i['provisioningSate'] is 'Deleting': #This is the instance being scaled in
+                logger.info("[INFO]: {} is getting scaled in...so poping it off the list".format(i['instanceId']))
+                instance_id = int(i['instanceId'])
+                #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
+                instance_list.pop(instance_id)
     return "<h1>Bye Bye World!</h1>"
 
 
 def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
+       global ilb_ip
+       global api_key 
+       global instrumentation_key
        err = 'no'
        logger.info("[INFO]: Checking auto commit status")
        while (True):
@@ -303,10 +297,26 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
-            #logger.error("[NAT Address RESPONSE]: {}".format(e))
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
        
+       logger.info("[INFO]: Enable azure metric push")
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable></request>"
+       try:
+            response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
+       except Exception as e:
+            logger.info("[INFO]: Untrust object update response: {}".format(e))
+            sys.exit(0)
+       
+       logger.info("[INFO]: Push instrumentation key to firewall")
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key></request>"
+       try:
+            response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
+       except Exception as e:
+            logger.info("[INFO]: Untrust object update response: {}".format(e))
+            sys.exit(0)
+
+       logger.info("[INFO]: Sending commit to firewall...Good Luck!!")
        cmd="https://"+scaled_fw_ip+"/api/?type=commit&cmd=<commit></commit>&key="+api_key
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
@@ -315,15 +325,18 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
     
     
-def main():
+def worker(api, ilb, key):
         global ilb_ip
         global api_key 
-        api_key = sys.argv[1]
-        ilb_ip = sys.argv[2]
+        global instrumentaion_key 
+        api_key = api
+        ilb_ip = ilb
+        instrumentation_key = key
         run()
+        #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
         while threading.active_count() > 0:
             time.sleep(1)
 
-if __name__ == "__main__":
-        main()
+#if __name__ == "__main__":
+#        main()
 
