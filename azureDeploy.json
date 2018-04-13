@@ -158,6 +158,7 @@
 },
   "variables": {
     "resourceGroupName": "[resourceGroup().name]", 
+    "location": "[resourceGroup().location]",
     "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
     "strAccountName": "[concat('storage',variables('namingInfix'))]",
     "vmssName": "[concat(parameters('vmssName'), variables('namingInfix'))]",
@@ -678,7 +679,7 @@
                 },
                 "webhooks": [
                     {
-                      "serviceUri": "[concat('http://', variables('workerDnsLabel'),'.',[resourceGroup().location],'.cloudapp.azure.com')]"
+                      "serviceUri": "[concat('http://', variables('workerDnsLabel'),'.',variables('location'),'.cloudapp.azure.com')]"
                     }
                 ]
             }
