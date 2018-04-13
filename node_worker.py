@@ -8,48 +8,30 @@ import shlex
 import urllib2
 import xml.etree.ElementTree as et
 import ssl 
-import socket
-import time
 import logging
 import sys
 import collections
 import itertools
-import time
 import os
-from applicationinsights import TelemetryClient
+import time
 
 #TO DO
-#1. this script assume az login has been done apriori
-#   Need to update this with a serive principal etc.
-#   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
-#   https://blogs.technet.microsoft.com/jessicadeen/azure/non-interactive-authentication-to-microsoft-azure/
-# ---- DONE
 #
-#2. Figure out the application insighits piece
-#   https://docs.microsoft.com/en-us/azure/monitoring-and-diagnostics/monitoring-enable-alerts-using-template
-#   Seems like there might be a way to do custom metrics
-#   https://github.com/F5Networks/f5-azure-arm-templates/blob/master/supported/solutions/autoscale/waf/existing_stack/PAYG/azuredeploy.json
-# -- DONE
-#
-#3. The worker node can be launched as part of the template with a custom script extension to launch the script
-#   So in this case can VMSS notification URL be http://{ref private ip}
-# -- DONE
-#
-# 4. Need to figure out what VMSS has during scale in event. Then delete instance id from instance_list 
+# 1. Need to figure out what VMSS has during scale in event. Then delete instance id from instance_list 
 # -- NOT STARTED
 # 
-# 5. Need to push instrumentation key into fw and then commit
+# 2. Need to push instrumentation key into fw and then commit
 # -- NOT STARTED
 #
-# 6. Use Azure Table Storage for storing the current fw instance list?
+# 3. Use Azure Table Storage for storing the current fw instance list?
 #
-#7. Launch Panorama as part of template and then push panorama ip to firewall
+# 4. Launch Panorama as part of template and then push panorama ip to firewall
 #   @Scale in event, ask panoram ato delicense the firewall that scaled in
 # -- NOT STARTED
 
 
 app = Bottle()
-LOG_FILENAME = 'azure-autoscaling.log'
+LOG_FILENAME = 'azure-autoscaling-webhook.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -63,17 +45,6 @@ scaled_fw_untrust_ip = ""
 ilb_ip = ""
 api_key = ""
 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-
-metric_list = ('DataPlaneCPUUtilizationPct', "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
-
-##NEED FROM COMMAND LINE OR IN ENVIRONMENT VARIABLE
-service_principal = 'service_principal'
-tenant_id = 'tenant_id'
-client_password = 'client_secret'
-instrumentation_key = 'instrumentation-key'
-appinsights_name = 'appinsights_name'
-rg_name = 'rg_name'
-
 
 def check_fw_up(ip_to_monitor):
     global gcontext
@@ -121,7 +92,6 @@ def check_auto_commit_status(ip_to_monitor):
     logger.info('[INFO]: Sending command: %s', cmd)
     try:
         response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
-        #response = urllib2.urlopen(cmd,  timeout=5).read()
     except Exception as e:
         logger.info("[INFO]: No response from FW. So maybe not up! {}".format(e))
         return 'no'
@@ -172,7 +142,6 @@ def check_job_status(ip_to_monitor, job_id):
     logger.info('[INFO]: Sending command: %s', cmd)
     try:
         response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
-        #response = urllib2.urlopen(cmd,  timeout=5).read()
     except Exception as e:
         logger.info("[ERROR]: ERROR...fw should be up!! {}".format(e))
         return 'false'
@@ -213,10 +182,10 @@ def check_job_status(ip_to_monitor, job_id):
 def index():
     global fw_untrust_ip
     global instance_id
+
     ip = ""
     u_ip = ""
     postdata = request.body.read()
-    #logger.info("POSTDATA {}".format(postdata))
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
 
@@ -236,17 +205,17 @@ def index():
                 try:
                    y = json.loads(subprocess.check_output(shlex.split(args)))
                    logger.info(y)
-                except Exception, e:
+                except Exception as e:
                     logger.info("[ERROR]: vmss nic list-vms error {}".format(e))
                     #while (True):
                     #    logger.info("[INFO]: Polling to get ip addresses")
                     #    args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
                 #else:
                 #    continue #Not the ip address we are looking for?
-                logger.info(y[0]['ipConfigurations'][0]['privateIpAddress'])
-                logger.info(y[0]['ipConfigurations'][1]['privateIpAddress'])
+                logger.info("[INFO]: ipconfig[0] {}".format(y[0]['ipConfigurations'][0]['privateIpAddress']))
+                logger.info("[INFO]: ipconfig[1] {}".format(y[1]['ipConfigurations'][0]['privateIpAddress']))
                 instance_list[instance_id].append({'mgmt-ip': y[0]['ipConfigurations'][0]['privateIpAddress']})
-                instance_list[instance_id].append({'untrust-ip': y[0]['ipConfigurations'][1]['privateIpAddress']})
+                instance_list[instance_id].append({'untrust-ip': y[1]['ipConfigurations'][0]['privateIpAddress']})
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
            else:
@@ -254,6 +223,7 @@ def index():
        scaled_fw_ip = instance_list[instance_id]['mgmt-ip']
        scaled_fw_untrust_ip = instance_list[instance_id]['untrust-ip']
        err = 'no'
+       logger.info("[INFO]: Checking auto commit status")
        while (True):
            err = check_auto_commit_status(scaled_fw_ip)
            if err == 'yes':
@@ -261,7 +231,7 @@ def index():
            else:
                time.sleep(10)
                continue
-
+       logger.info("[INFO]: Checking chassis status")
        while (True):
           err = check_fw_up(scaled_fw_ip)
           if err == 'yes':
@@ -308,73 +278,11 @@ def index():
     return "<h1>Bye Bye World!</h1>"
     
 def main():
-        global service_principal
-        global client_password
-        global tenant_id
-        global instrumentation_key
         global ilb_ip
-        global api_key
-        global appinsights_name
-        global rg_name
-        global app
-        service_principal = sys.argv[1]
-        client_password = sys.argv[2]
-        tenant_id = sys.argv[3]
-        api_key = sys.argv[4]
-        ilb_ip = sys.argv[5]
-        appinsights_name = sys.argv[6]
-        rg_name = sys.argv[7]
-        command = 'az login --service-principal -u ' + service_principal + ' -p ' + client_password + ' --tenant ' + tenant_id 
-        logger.info("[INFO]: Sending az login command {}".format(command))
-        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
-        proc_stdout = process.communicate()[0].strip()
-        #y = json.loads(proc_stdout)
-        logger.info("[INFO]: output of az login {}".format(proc_stdout))
-        command = 'az resource show -g ' + rg_name + ' --resource-type microsoft.insights/components -n ' + appinsights_name + ' --query properties.InstrumentationKey -o tsv'
-        logger.info("[INFO]: Sending az resource show {}".format(command))
-        instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
-        logger.info("[INFO]: output of az resource show {}".format(instrumentation_key))
-        logger.info("[INFO]: publishing metric list {}".format(metric_list))
-        #logger.info(str(instrumentation_key))
-        #logger.info(instrumentation_key)
-        tc = TelemetryClient(instrumentation_key.rstrip())
-        tc.track_metric('DataPlaneCPUUtilizationPct', 0)
-        tc.flush()
-        tc.track_metric('DataPlaneCPUUtilizationPct', 0)        
-        tc.flush()
-        time.sleep(10)      
-        tc.track_metric('SessionUtilizationPct', 0)
-        tc.flush()
-        tc.track_metric('SessionUtilizationPct', 0)        
-        tc.flush()
-        time.sleep(10)                
-        tc.track_metric('SslProxyUtilizationPct', 0)
-        tc.flush()
-        tc.track_metric('SslProxyUtilizationPct', 0)        
-        tc.flush()
-        time.sleep(10)               
-        tc.track_metric('GPGatewayTunnelUtilizationPct', 0)
-        tc.flush()
-        tc.track_metric('GPGatewayTunnelUtilizationPct', 0)        
-        tc.flush() 
-        time.sleep(10)               
-        tc.track_metric('DPPacketBufferUtilizationPct', 0)
-        tc.flush()
-        tc.track_metric('DPPacketBufferUtilizationPct', 0)        
-        tc.flush() 
-        time.sleep(150)                     
-                                
+        global api_key 
+        api_key = sys.argv[1]
+        ilb_ip = sys.argv[2]
 
-
-        #time.sleep(100)
-        #for metric in metric_list:
-        #    logger.info("[INFO]: metric {}".format(metric))
-        #    tc.track_metric(metric, 0)
-        #    tc.flush()
-        #    tc.flush()
-        #    time.sleep(10)
-
-        #app.daemon_run(host='0.0.0.0', port=80)
         app.run(host='0.0.0.0', port=80)
 
 if __name__ == "__main__":
