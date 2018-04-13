@@ -2,8 +2,6 @@
 
 import json
 import subprocess
-from bottle import request, run, route, Bottle
-from bottledaemon import daemon_run
 import shlex
 import urllib2
 import xml.etree.ElementTree as et
@@ -14,6 +12,7 @@ import collections
 import itertools
 import os
 import time
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 #TO DO
 #
@@ -30,7 +29,6 @@ import time
 # -- NOT STARTED
 
 
-app = Bottle()
 LOG_FILENAME = 'azure-autoscaling-webhook.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
 logger = logging.getLogger(__name__)
@@ -178,17 +176,47 @@ def check_job_status(ip_to_monitor, job_id):
                         else:
                             return 'pending'
 
-@app.route('/', method='POST')
-def index():
+
+
+class ServerHandler(BaseHTTPRequestHandler):
+    def _set_headers(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_GET(self):
+        self._set_headers()
+        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+
+    def do_HEAD(self):
+        self._set_headers()
+        
+    def do_POST(self):
+        # Doesn't do anything with posted data
+        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
+        post_data = self.rfile.read(content_length) # <--- Gets the data itself
+        self._set_headers()
+        self.wfile.write("<html><body><h1>POST!</h1></body></html>")
+        index(post_data)
+        
+def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
+        server_address = ('0.0.0.0', port)
+        httpd = server_class(server_address, handler_class)
+        print 'Starting httpd...'
+        httpd.serve_forever()
+
+
+def index(postdata):
     global fw_untrust_ip
     global instance_id
 
     ip = ""
     u_ip = ""
-    postdata = request.body.read()
+    #postdata = request.body.read()
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
-
+    
+    
     ##SCALE OUT
     if 'operation' in data and data['operation'] == 'Scale Out':
        resource_id = data['context']['resourceId']
@@ -282,8 +310,7 @@ def main():
         global api_key 
         api_key = sys.argv[1]
         ilb_ip = sys.argv[2]
-
-        app.run(host='0.0.0.0', port=80)
+        run()
 
 if __name__ == "__main__":
         main()
