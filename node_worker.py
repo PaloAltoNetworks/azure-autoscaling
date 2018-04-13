@@ -13,6 +13,7 @@ import itertools
 import os
 import time
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import threading
 
 #TO DO
 #
@@ -30,14 +31,14 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 
 LOG_FILENAME = 'azure-autoscaling-webhook.log'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
+#logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='%(message)s',)
+logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, filemode='w',format='[%(asctime)s] [%(levelname)s] (%(threadName)-10s) %(message)s',)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-instance_list = collections.defaultdict(list)
+instance_list = collections.defaultdict(dict)
 instance_id = ""
-fw_untrust_ip = list()
 scaled_fw_ip = ""
 scaled_fw_untrust_ip = ""
 ilb_ip = ""
@@ -207,7 +208,6 @@ def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
 
 
 def index(postdata):
-    global fw_untrust_ip
     global instance_id
 
     ip = ""
@@ -215,8 +215,7 @@ def index(postdata):
     #postdata = request.body.read()
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
-    
-    
+
     ##SCALE OUT
     if 'operation' in data and data['operation'] == 'Scale Out':
        resource_id = data['context']['resourceId']
@@ -226,13 +225,12 @@ def index(postdata):
        x = json.loads(subprocess.check_output(shlex.split(args)))
        for i in x:
            if i['instanceId'] not in instance_list:
-                instance_id = i['instanceId']
+                instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
-                args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
+                args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
                 logger.info("[INFO] vmss nic list {}".format(args))
                 try:
                    y = json.loads(subprocess.check_output(shlex.split(args)))
-                   logger.info(y)
                 except Exception as e:
                     logger.info("[ERROR]: vmss nic list-vms error {}".format(e))
                     #while (True):
@@ -240,16 +238,39 @@ def index(postdata):
                     #    args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  instance_id
                 #else:
                 #    continue #Not the ip address we are looking for?
-                logger.info("[INFO]: ipconfig[0] {}".format(y[0]['ipConfigurations'][0]['privateIpAddress']))
-                logger.info("[INFO]: ipconfig[1] {}".format(y[1]['ipConfigurations'][0]['privateIpAddress']))
-                instance_list[instance_id].append({'mgmt-ip': y[0]['ipConfigurations'][0]['privateIpAddress']})
-                instance_list[instance_id].append({'untrust-ip': y[1]['ipConfigurations'][0]['privateIpAddress']})
+                ip = y[0]['ipConfigurations'][0]['privateIpAddress']
+                instance_list[instance_id]['mgmt-ip'] = ip
+                logger.info("[INFO]: ipconfig[0] {}".format(ip))
+
+                ip = y[1]['ipConfigurations'][0]['privateIpAddress']
+                instance_list[instance_id]['untrust-ip'] =  ip
+                logger.info("[INFO]: ipconfig[1] {}".format(ip))
+                
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
            else:
+                logger.info("[INFO]: {} instance ID found in list ".format(instance_id))
                 continue 
-       scaled_fw_ip = instance_list[instance_id]['mgmt-ip']
-       scaled_fw_untrust_ip = instance_list[instance_id]['untrust-ip']
+       mgmt_ip = instance_list[instance_id]['mgmt-ip']
+       untrust_ip = instance_list[instance_id]['untrust-ip']
+       logger.info("[INFO]: starting thread to check firewall with ip {}". format(mgmt_ip))
+       t1 = threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,))
+       t1.start()
+       return "<h1>Hello World!</h1>"
+    ##SCALE IN
+    elif  'operation' in data and data['operation'] == 'Scale In':
+        resource_id = data['context']['resourceId']
+        rg_name = data['context']['resourceGroupName']
+        vmss_name = data['context']['resourceName'] 
+        args = 'az vmss list-instances --ids '+resource_id
+        x = json.loads(subprocess.check_output(shlex.split(args)))
+        logger.info("[INFO]: Scaled in instance ids {}". format(x))
+        ##NEED TO REMOVE THE INSTANCE THAT GOT SCALED IN...HOW TO FIGURE THAT OUT?
+        ##SO WHAT DOES THE vmss cli return?
+    return "<h1>Bye Bye World!</h1>"
+
+
+def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
        err = 'no'
        logger.info("[INFO]: Checking auto commit status")
        while (True):
@@ -293,17 +314,6 @@ def index(postdata):
             logger.info("[ERROR]: Commit error: {}".format(e))
             sys.exit(0)
     
-       return "<h1>Hello World!</h1>"
-    ##SCALE IN
-    elif  'operation' in data and data['operation'] == 'Scale In':
-        resource_id = data['context']['resourceId']
-        rg_name = data['context']['resourceGroupName']
-        vmss_name = data['context']['resourceName'] 
-        args = 'az vmss list-instances --ids '+resource_id
-        x = json.loads(subprocess.check_output(shlex.split(args)))
-        ##NEED TO REMOVE THE INSTANCE THAT GOT SCALED IN...HOW TO FIGURE THAT OUT?
-        ##SO WHAT DOES THE vmss cli return?
-    return "<h1>Bye Bye World!</h1>"
     
 def main():
         global ilb_ip
@@ -311,6 +321,8 @@ def main():
         api_key = sys.argv[1]
         ilb_ip = sys.argv[2]
         run()
+        while threading.active_count() > 0:
+            time.sleep(1)
 
 if __name__ == "__main__":
         main()
