@@ -299,7 +299,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Enable azure metric push")
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
@@ -307,7 +307,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Push instrumentation key {} to firewall".format(instrumentation_key))
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
