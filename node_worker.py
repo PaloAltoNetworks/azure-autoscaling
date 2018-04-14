@@ -227,8 +227,8 @@ def index(postdata):
                 instance_list[instance_id]['mgmt-ip'] = y[0]['ipConfigurations'][0]['privateIpAddress']
                 instance_list[instance_id]['untrust-ip'] = y[1]['ipConfigurations'][0]['privateIpAddress']
               
-                logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['mgmt-ip']))
-                logger.info("[INFO]: Instance ID: {}".format(instance_list[instance_id]['untrust-ip']))
+                logger.info("[INFO]: Instance ID {} mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
+                logger.info("[INFO]: Instance ID: {} untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
            else:
                 logger.info("[INFO]: {} instance ID found in list ".format(instance_id))
                 continue 
@@ -249,7 +249,7 @@ def index(postdata):
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
             if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
-                logger.info("[INFO]: {} is getting scaled in...so poping it off the list".format(i['instanceId']))
+                logger.info("[INFO]: {} is getting scaled in...so popping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
                 instance_list.pop(instance_id)
