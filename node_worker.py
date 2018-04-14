@@ -16,9 +16,9 @@ import threading
 
 #TO DO
 #
-# 3. Use Azure Table Storage for storing the current fw instance list?
+# 1. Use Azure Table Storage for storing the current fw instance list?
 #
-# 4. Launch Panorama as part of template and then push panorama ip to firewall
+# 2. Launch Panorama as part of template and then push panorama ip to firewall
 #   @Scale in event, ask panoram ato delicense the firewall that scaled in
 # -- NOT STARTED
 
@@ -299,7 +299,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Enable azure metric push")
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable></request>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable></request>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
@@ -307,7 +307,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Push instrumentation key {} to firewall".format(instrumentation_key))
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key></request>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key></request>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
