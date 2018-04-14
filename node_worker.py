@@ -217,7 +217,7 @@ def index(postdata):
        x = json.loads(subprocess.check_output(shlex.split(args)))
        logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
-           if i['provisioningState'] == 'Creating': # This is the instance being scaled out
+           if i['provisioningState'] == 'Creating' and int(i['instanceId']) not in instance_list: # This is the instance being scaled out
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
@@ -248,7 +248,7 @@ def index(postdata):
         x = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
-            if i['provisioningState'] == 'Deleting': #This is the instance being scaled in
+            if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
                 logger.info("[INFO]: {} is getting scaled in...so poping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
@@ -299,7 +299,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Enable azure metric push")
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
@@ -307,7 +307,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             sys.exit(0)
        
        logger.info("[INFO]: Push instrumentation key {} to firewall".format(instrumentation_key))
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
