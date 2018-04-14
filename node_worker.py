@@ -306,7 +306,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
        
-       logger.info("[INFO]: Push instrumentation key to firewall")
+       logger.info("[INFO]: Push instrumentation key {} to firewall".format(instrumentation_key))
        cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key></request>"
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
@@ -326,7 +326,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
 def main():
         global ilb_ip
         global api_key 
-        global instrumentaion_key 
+        global instrumentation_key
 
         api_key = sys.argv[4]
         ilb_ip = sys.argv[5]
@@ -338,8 +338,8 @@ def main():
         logger.info("[INFO]: output of az login {}".format(proc_stdout))
         command = 'az resource show -g ' + sys.argv[7] + ' --resource-type microsoft.insights/components -n ' + sys.argv[6] + ' --query properties.InstrumentationKey -o tsv'
         logger.info("[INFO]: Show resources {}".format(command))
-        instrumentaion_key = subprocess.check_output(shlex.split(command)).rstrip()
-        logger.info("[INFO]: Instrumentation Key {}".format(instrumentaion_key))
+        instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
+        logger.info("[INFO]: Instrumentation Key {}".format(instrumentation_key))
         run()
         #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
         while threading.active_count() > 0:
