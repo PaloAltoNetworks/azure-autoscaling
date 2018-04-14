@@ -253,7 +253,10 @@ def index(postdata):
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
                 instance_list.pop(instance_id)
-    return "<h1>Bye Bye World!</h1>"
+            else:
+                logger.info("[INFO]: Instance ID {} not being scaled in".format(i['instanceId']))
+                continue
+        return "<h1>Bye Bye World!</h1>"
 
 
 def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
