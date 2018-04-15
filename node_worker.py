@@ -293,7 +293,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
               continue
 
        #PUSH NAT RULE OR UPDATE THE NAT ADDRESS OBJECTS
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AWS-NAT-ILB'><description>ILB-IP-address</description><ip-netmask>"+ilb_ip+"</ip-netmask></entry>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AZ-NAT-ILB'><description>ILB-IP-address</description><ip-netmask>"+ilb_ip+"</ip-netmask></entry>"
        logger.info("[INFO]: Pushing ILB NAT RULE")
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
@@ -301,7 +301,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
             logger.info("[INFO]: Push NAT Address reponse: {}".format(e))
             sys.exit(0)
          
-       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AWS-NAT-UNTRUST'><description>UNTRUST-IP-address</description><ip-netmask>"+scaled_fw_untrust_ip+"</ip-netmask></entry>"
+       cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AZ-NAT-UNTRUST'><description>UNTRUST-IP-address</description><ip-netmask>"+scaled_fw_untrust_ip+"</ip-netmask></entry>"
        logger.info("[INFO]: Updating Untrust ip address for NAT rule")
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
