@@ -14,13 +14,22 @@ import time
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import threading
 
-#TO DO
+# TO DO
 #
 # 1. Use Azure Table Storage for storing the current fw instance list?
-#
-# 2. Launch Panorama as part of template and then push panorama ip to firewall
-#   @Scale in event, ask panoram ato delicense the firewall that scaled in
 # -- NOT STARTED
+#
+# 2. Launch Panorama as part of template and then push panorama ip to firewall (makes panorama mandatory)
+#   @Scale in event, ask panorama to delicense the firewall that scaled in and delete from panorama
+# -- NOT STARTED
+#
+# 3. Test scale in and out events along with ILB and web servers in back end.
+# -- NOT STARTED
+#
+# 4. Currently boostrap doesn't do the extra folder piece...need to add?
+# 
+# 5. Take over the world
+#  -- IN PROGRESS  
 
 
 LOG_FILENAME = 'azure-autoscaling-webhook.log'

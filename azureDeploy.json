@@ -118,11 +118,11 @@
              "allowedValues": [
                   "DataPlaneCPUUtilizationPct", 
                   "panGPGatewayUtilizationPct",
-                  "panGPGatewayUtilizationActiveTunnels",
-                  "DataPlanePacketBufferUtilizationPct",
+                  "panGPGWUtilizationActiveTunnels",
+                  "DataPlanePacketBufferUtilization",
                   "panSessionActive",
                   "panSessionSslProxyUtilization",
-                  "panSessionUtlization"                  
+                  "panSessionUtilization"                  
                 ], 
              "defaultValue": "DataPlaneCPUUtilizationPct", 
              "metadata": {
@@ -139,14 +139,14 @@
   "ServicePrincipal": {
     "type": "string",
     "metadata": {
-      "description": "Service Principal"
+      "description": "Service Principal Name"
     },
     "defaultValue": "https://vm-monitor.azurewebsites.net"
   },
   "ClientSecret": {
       "type": "securestring",
       "metadata": {
-        "description": "Client Secret"
+        "description": "Client Secret for service principal"
       },
       "defaultValue": "Fs6xEUZ5RHsl6Xpk97Me3Uk2RWpNOWF//tGMLmzy99I="
   },
@@ -154,7 +154,7 @@
     "type": "string",
     "defaultValue": "66b66353-3b76-4e41-9dc3-fee328bd400e",
     "metadata": {
-      "description": "Tenant ID"
+      "description": "Tenant ID for service principal"
     }
   }
 },
