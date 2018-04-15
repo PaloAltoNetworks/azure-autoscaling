@@ -213,18 +213,17 @@ def index(postdata):
        rg_name = data['context']['resourceGroupName']
        vmss_name = data['context']['resourceName'] 
        args = 'az vmss list-instances --ids ' + resource_id
-       logger.info("[INFO]: List instances: {}\n".format(args))
+       logger.info("[INFO]: List instances: {}".format(args))
        x = json.loads(subprocess.check_output(shlex.split(args)))
        logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
-           logger.info("Inside for {}\n".format(i))
-           if i['provisioningState'] == 'Creating': # This is the instance being scaled out
-                logger.info("Inside if {}\n".format(i))
+           #logger.info("Inside for {}\n".format(i))
+           if i['provisioningState'] == 'Creating' and int(i['instanceId']) not in instance_list: # This is the instance being scaled out
+                #logger.info("Inside if {}\n".format(i))
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
                 logger.info("[INFO] vmss nic list {}".format(args))
-                #WILL I GET THE NIC LIST ALL THE TIME? OR IS THERE A RACE?
                 y = json.loads(subprocess.check_output(shlex.split(args)))
                 instance_list[instance_id]['mgmt-ip'] = y[0]['ipConfigurations'][0]['privateIpAddress']
                 instance_list[instance_id]['untrust-ip'] = y[1]['ipConfigurations'][0]['privateIpAddress']
@@ -232,8 +231,8 @@ def index(postdata):
                 logger.info("[INFO]: Instance ID {} mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {} untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
            else:
-                logger.info("[inside elif]: {}\n".format(i))
-                logger.info("[INFO]: {} instance ID not in Creating state\n".format(i['instanceId']))
+                #logger.info("[inside elif]: {}\n".format(i))
+                logger.info("[INFO]: {} instance ID not in Creating state or already exists in database".format(i['instanceId']))
                 continue 
        mgmt_ip = instance_list[instance_id]['mgmt-ip']
        untrust_ip = instance_list[instance_id]['untrust-ip']
@@ -242,7 +241,7 @@ def index(postdata):
        t1.start()
        return "<h1>Hello World!</h1>"
     ##SCALE IN
-    elif  'operation' in data and data['operation'] == 'Scale In':
+    elif  'operation' in data and data['operation'] == 'Scale In' and int(i['instanceId']) in instance_list:
         resource_id = data['context']['resourceId']
         rg_name = data['context']['resourceGroupName']
         vmss_name = data['context']['resourceName'] 
