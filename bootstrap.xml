@@ -423,12 +423,12 @@
                     <member>any</member>
                   </source>
                   <destination>
-                    <member>AWS-NAT-UNTRUST</member>
+                    <member>AZ-NAT-UNTRUST</member>
                   </destination>
                   <service>any</service>
                   <to-interface>ethernet1/1</to-interface>
                   <destination-translation>
-                    <translated-address>AWS-NAT-ILB</translated-address>
+                    <translated-address>AZ-NAT-ILB</translated-address>
                   </destination-translation>
                   <source-translation>
                     <dynamic-ip-and-port>
@@ -450,11 +450,11 @@
             </network>
           </import>
           <address>
-            <entry name="AWS-NAT-ILB">
+            <entry name="AZ-NAT-ILB">
               <ip-netmask>192.168.12.223</ip-netmask>
               <description>ILB-IP-address</description>
             </entry>
-            <entry name="AWS-NAT-UNTRUST">
+            <entry name="AZ-NAT-UNTRUST">
               <ip-netmask>192.168.11.115</ip-netmask>
               <description>UNTRUST-IP-address</description>
             </entry>
