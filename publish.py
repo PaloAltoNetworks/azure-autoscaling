@@ -13,8 +13,13 @@ logging.basicConfig(filename=LOG_FILENAME1,level=logging.INFO, filemode='w',form
 logger1 = logging.getLogger(__name__)
 logger1.setLevel(logging.INFO)
 
-metric_list = ('DataPlaneCPUUtilizationPct', "SessionUtilizationPct", "SslProxyUtilizationPct", "GPGatewayTunnelUtilizationPct", "DPPacketBufferUtilizationPct")
-
+metric_list = ("DataPlaneCPUUtilizationPct",\
+                "panGPGatewayUtilizationPct",\
+                "panGPGatewayUtilizationActiveTunnels",\
+                "DataPlanePacketBufferUtilizationPct",\
+                "panSessionActive",\
+                "panSessionSslProxyUtilization",\
+                "panSessionUtlization")
 def main():
         command = 'az login --service-principal -u ' + sys.argv[1] + ' -p ' + sys.argv[2] + ' --tenant ' + sys.argv[3] 
         logger1.info("[INFO]: Logging in {}".format(command))
@@ -64,6 +69,12 @@ def main():
         tc.flush() 
         time.sleep(10)
 
+        #for metric in metric_list:
+        #   tc.track_metric(metric, 0)
+        #   tc.flush()
+        #   tc.track_metric(metric, 0)
+        #   tc.flush()
+        #   time.sleep(10)
 
 
 

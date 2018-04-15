@@ -270,7 +270,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
            if err == 'yes':
                break
            else:
-               time.sleep(10)
+               time.sleep(60)
                continue
        logger.info("[INFO]: Checking chassis status")
        while (True):
@@ -278,7 +278,7 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
           if err == 'yes':
               break
           else:
-              time.sleep(10)
+              time.sleep(60)
               continue
 
        #PUSH NAT RULE OR UPDATE THE NAT ADDRESS OBJECTS
