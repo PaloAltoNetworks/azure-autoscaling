@@ -217,7 +217,7 @@ def index(postdata):
        x = json.loads(subprocess.check_output(shlex.split(args)))
        logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
-           if i['provisioningState'] == 'Creating' and int(i['instanceId']) not in instance_list: # This is the instance being scaled out
+           if i['provisioningState'] == 'Creating': # This is the instance being scaled out
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
@@ -230,7 +230,7 @@ def index(postdata):
                 logger.info("[INFO]: Instance ID {} mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {} untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
            else:
-                logger.info("[INFO]: {} instance ID found in list ".format(instance_id))
+                logger.info("[INFO]: {} instance ID not in Creating state".format(instance_id))
                 continue 
        mgmt_ip = instance_list[instance_id]['mgmt-ip']
        untrust_ip = instance_list[instance_id]['untrust-ip']
@@ -248,7 +248,7 @@ def index(postdata):
         x = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
-            if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
+            if i['provisioningState'] == 'Deleting': #This is the instance being scaled in
                 logger.info("[INFO]: {} is getting scaled in...so popping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
