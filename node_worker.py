@@ -217,7 +217,9 @@ def index(postdata):
        x = json.loads(subprocess.check_output(shlex.split(args)))
        logger.info("[INFO]: SCALE UP list instances output {}".format(x))
        for i in x:
+           logger.info("Inside for {}".format(i))
            if i['provisioningState'] == 'Creating': # This is the instance being scaled out
+                logger.info("Inside if {}".format(i))
                 instance_id = int(i['instanceId'])
                 logger.info("[INFO]: Instance ID: {}".format(instance_id))
                 args = 'az vmss nic list-vm-nics --resource-group ' + rg_name + ' --vmss-name ' + vmss_name + ' --instance-id ' +  i['instanceId']
@@ -230,6 +232,7 @@ def index(postdata):
                 logger.info("[INFO]: Instance ID {} mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {} untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
            else:
+                logger.info("[inside elif]: {}".format(i))
                 logger.info("[INFO]: {} instance ID not in Creating state".format(instance_id))
                 continue 
        mgmt_ip = instance_list[instance_id]['mgmt-ip']
