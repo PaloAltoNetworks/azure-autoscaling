@@ -8,8 +8,6 @@ import logging
 import sys
 from applicationinsights import TelemetryClient
 
-
-
 LOG_FILENAME1 = 'azure-autoscaling-publish.log'
 logging.basicConfig(filename=LOG_FILENAME1,level=logging.INFO, filemode='w',format='[%(asctime)s] [%(levelname)s] (%(threadName)-10s) %(message)s',)
 logger1 = logging.getLogger(__name__)
@@ -35,26 +33,39 @@ def main():
         tc.track_metric('DataPlaneCPUUtilizationPct', 0)        
         tc.flush()
         time.sleep(10)      
-        tc.track_metric('SessionUtilizationPct', 0)
+        tc.track_metric('panGPGatewayUtilizationPct', 0)
         tc.flush()
-        tc.track_metric('SessionUtilizationPct', 0)        
+        tc.track_metric('panGPGatewayUtilizationPct', 0)        
         tc.flush()
         time.sleep(10)                
-        tc.track_metric('SslProxyUtilizationPct', 0)
+        tc.track_metric('panGPGatewayUtilizationActiveTunnels', 0)
         tc.flush()
-        tc.track_metric('SslProxyUtilizationPct', 0)        
+        tc.track_metric('panGPGatewayUtilizationActiveTunnels', 0)        
         tc.flush()
         time.sleep(10)               
-        tc.track_metric('GPGatewayTunnelUtilizationPct', 0)
+        tc.track_metric('DataPlanePacketBufferUtilizationPct', 0)
         tc.flush()
-        tc.track_metric('GPGatewayTunnelUtilizationPct', 0)        
+        tc.track_metric('DataPlanePacketBufferUtilizationPct', 0)        
         tc.flush() 
         time.sleep(10)               
-        tc.track_metric('DPPacketBufferUtilizationPct', 0)
+        tc.track_metric('panSessionActive', 0)
         tc.flush()
-        tc.track_metric('DPPacketBufferUtilizationPct', 0)        
+        tc.track_metric('panSessionActive', 0)        
         tc.flush() 
         time.sleep(10)
-                                
+        tc.track_metric('panSessionSslProxyUtilization', 0)
+        tc.flush()
+        tc.track_metric('panSessionSslProxyUtilization', 0)        
+        tc.flush() 
+        time.sleep(10)        
+        tc.track_metric('panSessionUtlization', 0)
+        tc.flush()
+        tc.track_metric('panSessionUtlization', 0)        
+        tc.flush() 
+        time.sleep(10)
+
+
+
+
 if __name__ == "__main__":
     main()

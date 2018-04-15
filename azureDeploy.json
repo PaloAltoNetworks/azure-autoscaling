@@ -117,10 +117,12 @@
              "type": "string",
              "allowedValues": [
                   "DataPlaneCPUUtilizationPct", 
-                  "SessionUtilizationPct", 
-                  "SslProxyUtilizationPct",
-                  "GPGatewayTunnelUtilizationPct",
-                  "DPPacketBufferUtilizationPct"
+                  "panGPGatewayUtilizationPct",
+                  "panGPGatewayUtilizationActiveTunnels",
+                  "DataPlanePacketBufferUtilizationPct",
+                  "panSessionActive",
+                  "panSessionSslProxyUtilization",
+                  "panSessionUtlization"                  
                 ], 
              "defaultValue": "DataPlaneCPUUtilizationPct", 
              "metadata": {
