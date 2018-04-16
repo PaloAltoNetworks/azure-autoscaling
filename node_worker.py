@@ -250,7 +250,7 @@ def index(postdata):
        t1.start()
        return "<h1>Hello World!</h1>"
     ##SCALE IN
-    elif  'operation' in data and data['operation'] == 'Scale In' and int(i['instanceId']) in instance_list:
+    elif  'operation' in data and data['operation'] == 'Scale In':
         resource_id = data['context']['resourceId']
         rg_name = data['context']['resourceGroupName']
         vmss_name = data['context']['resourceName'] 
@@ -259,7 +259,7 @@ def index(postdata):
         x = json.loads(subprocess.check_output(shlex.split(args)))
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
-            if i['provisioningState'] == 'Deleting': #This is the instance being scaled in
+            if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
                 logger.info("[INFO]: {} is getting scaled in...so popping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
