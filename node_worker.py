@@ -237,15 +237,15 @@ def index(postdata):
                 instance_list[instance_id]['mgmt-ip'] = y[0]['ipConfigurations'][0]['privateIpAddress']
                 instance_list[instance_id]['untrust-ip'] = y[1]['ipConfigurations'][0]['privateIpAddress']
               
-                logger.info("[INFO]: Instance ID {} mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
-                logger.info("[INFO]: Instance ID: {} untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
+                logger.info("[INFO]: Instance ID: {}: mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
+                logger.info("[INFO]: Instance ID: {}: untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
            else:
                 #logger.info("[inside elif]: {}\n".format(i))
-                logger.info("[INFO]: {} instance ID not in Creating state or already exists in database".format(i['instanceId']))
+                logger.info("[INFO]:  instance ID {} not in Creating state or already exists in database".format(i['instanceId']))
                 continue 
        mgmt_ip = instance_list[instance_id]['mgmt-ip']
        untrust_ip = instance_list[instance_id]['untrust-ip']
-       logger.info("[INFO]: starting thread to check firewall with ip {}". format(mgmt_ip))
+       logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
        t1 = threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,))
        t1.start()
        return "<h1>Hello World!</h1>"
@@ -260,7 +260,7 @@ def index(postdata):
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
             if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
-                logger.info("[INFO]: {} is getting scaled in...so popping it off the list".format(i['instanceId']))
+                logger.info("[INFO]: Instance {} is getting scaled in...so popping it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
                 instance_list.pop(instance_id)
