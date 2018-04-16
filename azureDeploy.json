@@ -116,15 +116,15 @@
     "autoScaleMetric": {
              "type": "string",
              "allowedValues": [
-                  "DataPlaneCPUUtilizationPct", 
-                  "panGPGatewayUtilizationPct",
-                  "panGPGWUtilizationActiveTunnels",
-                  "DataPlanePacketBufferUtilization",
-                  "panSessionActive",
-                  "panSessionSslProxyUtilization",
-                  "panSessionUtilization"                  
+                  "Data Plane CPU Utilization %", 
+                  "GP Gateway Utilization %",
+                  "GP Gateway Active Tunnels",
+                  "Data Plane Packet Buffer Utilization %",
+                  "Active Sessions",
+                  "SSL Proxy Session Utilization %",
+                  "Session Utilization %"                  
                 ], 
-             "defaultValue": "DataPlaneCPUUtilizationPct", 
+             "defaultValue": "Active Session", 
              "metadata": {
                  "description": "Select the metric on which auto scale events should be triggered."
                 } 
@@ -204,26 +204,34 @@
     "appInsightsNameArray": "[split(concat(variables('appInsightsName'), ';', variables('resourceGroupName')) , ';')]", 
     "autoScaleMetric": "[parameters('autoScaleMetric')]", 
      "scaleMetricMap": {
-        "DataPlaneCPUUtilizationPct": {
+        "Data Plane CPU Utilization %": {
             "metricName": "customMetrics/DataPlaneCPUUtilizationPct", 
             "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
         }, 
-        "SessionUtilizationPct": {
-            "metricName": "customMetrics/panSessionUtilization", 
+        "GP Gateway Utilization %": {
+            "metricName": "customMetrics/panGPGatewayUtilizationPct", 
             "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
         }, 
-        "SslProxyUtilizationPct": {
-            "metricName": "customMetrics/panSessionSslProxyUtilization", 
+        "GP Gateway Active Tunnels": {
+            "metricName": "customMetrics/panGPGWUtilizationActiveTunnels", 
             "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
         },
-        "GPGatewayTunnelUtilizationPct": {
-          "metricName": "customMetrics/panpanGPGWUtilizationActiveTunnels", 
+        "Active Sessions": {
+          "metricName": "customMetrics/panSessionActive", 
           "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
         },
-        "DPPacketBufferUtilizationPct": {
+        "Data Plane Packet Buffer Utilization %": {
           "metricName": "customMetrics/DataPlanePacketBufferUtilization", 
           "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
-      }       
+      },
+      "SSL Proxy Session Utilization %": {
+        "metricName": "customMetrics/panSessionSslProxyUtilization", 
+        "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+    },
+    "Session Utilization %": {
+      "metricName": "customMetrics/panSessionUtilization", 
+      "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+  }        
     },     
     "CustomDataField": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
     "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
