@@ -124,7 +124,7 @@
                   "SSL Proxy Session Utilization %",
                   "Session Utilization %"                  
                 ], 
-             "defaultValue": "Active Session", 
+             "defaultValue": "Active Sessions", 
              "metadata": {
                  "description": "Select the metric on which auto scale events should be triggered."
                 } 
