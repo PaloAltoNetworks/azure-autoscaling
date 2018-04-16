@@ -15,11 +15,11 @@ logger1.setLevel(logging.INFO)
 
 metric_list = ("DataPlaneCPUUtilizationPct",\
                 "panGPGatewayUtilizationPct",\
-                "panGPGatewayUtilizationActiveTunnels",\
-                "DataPlanePacketBufferUtilizationPct",\
+                "panGPGWUtilizationActiveTunnels",\
+                "DataPlanePacketBufferUtilization",\
                 "panSessionActive",\
                 "panSessionSslProxyUtilization",\
-                "panSessionUtlization")
+                "panSessionUtilization")
 def main():
         command = 'az login --service-principal -u ' + sys.argv[1] + ' -p ' + sys.argv[2] + ' --tenant ' + sys.argv[3] 
         logger1.info("[INFO]: Logging in {}".format(command))
