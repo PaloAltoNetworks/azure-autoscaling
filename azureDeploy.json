@@ -35,7 +35,6 @@
       "metadata": {
         "description": "Name for your VMSS"
       },
-      "defaultValue": "nivmssname",
       "maxLength": 57
     },
     "imageVersion": {
@@ -75,29 +74,25 @@
             "type": "string",
             "metadata":{
               "description": "Name of storage account for bootstrap"
-            },
-            "defaultValue": "narayanazbootstrap"
+            }
       },
     "customaccesskey": {
             "type": "securestring",
             "metadata":{
               "description": "Storage account access key to read blob data privately"
-            },
-            "defaultValue": "Y828hks6q2Xn72WWOfI4IgNfaAFfZxPnyiiPaldVQF+PNuZTLJe3F3VHA/vgtLEksbdmbUIuGY6Ta7y6qFrDsg=="
+            }
       },
     "customfileshare": {
             "type": "string",
             "metadata":{
               "description": "File Share containing bootstrap file"
-            },
-            "defaultValue": "narayanazbsfileshare"
+            }
       },
     "ApiKey": {
              "type": "securestring",
              "metadata":{
                 "description": "API key for firewall"
-             },
-             "defaultValue": "LUFRPT1CU0dMRHIrOWFET0JUNzNaTmRoYmkwdjBkWWM9alUvUjBFTTNEQm93Vmx0OVhFRlNkOXdJNmVwYWk5Zmw4bEs3NjgwMkh5QT0="
+             }
     },
     "vmScaleSetMinCount": {
       "type": "int",
@@ -133,26 +128,22 @@
              "type" : "string",
              "metadata": {
                    "description": "Enter the name for your  Application Insights environment"
-              },
-              "defaultValue": "niappinsights"
+              }
     },
   "ServicePrincipal": {
     "type": "string",
     "metadata": {
       "description": "Service Principal Name"
-    },
-    "defaultValue": "https://vm-monitor.azurewebsites.net"
+    }
   },
   "ClientSecret": {
       "type": "securestring",
       "metadata": {
         "description": "Client Secret for service principal"
-      },
-      "defaultValue": "Fs6xEUZ5RHsl6Xpk97Me3Uk2RWpNOWF//tGMLmzy99I="
+      }
   },
   "TenantId":{
     "type": "string",
-    "defaultValue": "66b66353-3b76-4e41-9dc3-fee328bd400e",
     "metadata": {
       "description": "Tenant ID for service principal"
     }

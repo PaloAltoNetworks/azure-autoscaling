@@ -30,6 +30,13 @@ import threading
 # 
 # 5. Take over the world
 #  -- IN PROGRESS  
+#
+# 6. Serivce principal role is too wide for now. Narrow it down to only AppInsights
+# -- NOT STARTED
+#
+# 7. Test to see what happens when (in azureDeploy.json) we set autoscale min to 1...does webhook get triggered?
+#    In AWS the trigger message was different.
+# -- NOT STARTED
 
 
 LOG_FILENAME = 'azure-autoscaling-webhook.log'
