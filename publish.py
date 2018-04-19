@@ -27,7 +27,7 @@ metric_list = ("DataPlaneCPUUtilizationPct",\
                 "panSessionSslProxyUtilization",\
                 "panSessionUtilization")
 def main():
-        command = 'az login --service-principal -u ' + sys.argv[1] + ' -p ' + sys.argv[2] + ' --tenant ' + sys.argv[3] + ' --allow-no-subscriptions'
+        command = 'az login --service-principal -u ' + sys.argv[1] + ' -p ' + sys.argv[2] + ' --tenant ' + sys.argv[3]
         logger1.info("[INFO]: Logging in {}".format(command))
         process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
         proc_stdout = process.communicate()[0].strip()
