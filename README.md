@@ -19,6 +19,8 @@ Supports PAYG bundle1 only for now
     In AWS the trigger message was different.
  7. Add error checking
  8. Use Azure Python SDK? Makes things slightly easier...
+    https://github.com/gbowerman/azurerm/tree/master/docs (get_vmss_nics)
+    https://github.com/gbowerman/azurerm/blob/master/examples.md 
  9. Worker node HA?
 
 
