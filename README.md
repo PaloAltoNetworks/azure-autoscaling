@@ -6,7 +6,7 @@ This is work in progress...
 Service principal needs to be owner or reader...contributor role will not work
 Supports PAYG bundle1 only for now
 
-# TO DO
+## TO DO
 
  1. Use Azure Table Storage for storing the current fw instance list?
  2. Launch Panorama as part of template and then push panorama ip to firewall (makes panorama mandatory)
