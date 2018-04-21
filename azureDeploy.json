@@ -133,7 +133,7 @@
   "ServicePrincipal": {
     "type": "string",
     "metadata": {
-      "description": "Service Principal Name...APP ID URI"
+      "description": "Service Principal Application ID/Client ID"
     }
   },
   "ClientSecret": {

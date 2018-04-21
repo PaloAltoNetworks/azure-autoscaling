@@ -14,29 +14,6 @@ import time
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import threading
 
-# TO DO
-#
-# 1. Use Azure Table Storage for storing the current fw instance list?
-# -- NOT STARTED
-#
-# 2. Launch Panorama as part of template and then push panorama ip to firewall (makes panorama mandatory)
-#   @Scale in event, ask panorama to delicense the firewall that scaled in and delete from panorama
-# -- NOT STARTED
-#
-# 3. Test scale in and out events along with ILB and web servers in back end.
-# -- NOT STARTED
-#
-# 4. Currently boostrap doesn't do the extra folder piece...need to add?
-# 
-# 5. Take over the world
-#  -- IN PROGRESS  
-#
-# 6. Serivce principal role is too wide for now. Narrow it down to only AppInsights
-# -- NOT STARTED
-#
-# 7. Test to see what happens when (in azureDeploy.json) we set autoscale min to 1...does webhook get triggered?
-#    In AWS the trigger message was different.
-# -- NOT STARTED
 
 
 LOG_FILENAME = 'azure-autoscaling-webhook.log'

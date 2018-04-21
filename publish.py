@@ -9,11 +9,6 @@ import sys
 from applicationinsights import TelemetryClient
 
 
-# TO DO
-# 1. Serivce principal role is too wide for now. Narrow it down to only AppInsights
-# -- NOT STARTED
-
-
 LOG_FILENAME1 = 'azure-autoscaling-publish.log'
 logging.basicConfig(filename=LOG_FILENAME1,level=logging.INFO, filemode='w',format='[%(asctime)s] [%(levelname)s] (%(threadName)-10s) %(message)s',)
 logger1 = logging.getLogger(__name__)
