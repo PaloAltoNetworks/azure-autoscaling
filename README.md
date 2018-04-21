@@ -18,7 +18,7 @@ Supports PAYG bundle1 only for now
  6. Test to see what happens when (in azureDeploy.json) we set autoscale min to 1...does webhook get triggered?
     In AWS the trigger message was different.
  7. Add error checking
- 8. Use Azure Python SDK?
+ 8. Use Azure Python SDK? Makes things slightly easier...
  9. Worker node HA?
 
 
