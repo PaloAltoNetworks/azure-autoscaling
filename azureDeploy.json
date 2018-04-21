@@ -345,7 +345,7 @@
               "vmSize": "Standard_A1"
           },
           "osProfile": {
-              "computername": "worker-vm",
+              "computername": "[variables('worker-node-name')]",
               "adminUsername": "[parameters('adminUsername')]",
               "adminPassword": "[parameters('adminPassword')]"
           },
