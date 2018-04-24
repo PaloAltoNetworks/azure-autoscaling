@@ -8,13 +8,14 @@ Supports PAYG bundle1 only for now
 
 ## TO DO
 
- 1. Use cosmos dbe for storing the current fw instance list?
+ 1. Use cosmos DB for storing the current fw instance list?
  2.Ask for Panorama IP and  push panorama ip to firewall or bootstrap (makes panorama mandatory)
+   @Scale Out, store fw serial number
    @Scale In event, ask panorama to delicense the firewall that scaled in and delete from panorama
  3. Test scale in and out events along with ILB and web servers in back end.
- 4. Currently boostrap doesn't do the shares folder piece...need to add?
+ 4. Currently boostrap doesn't do the shared folder piece...need to add?
  If adding then check if string not empty then concat to customdata
- 5. Export some arguments into main as env variables? 
+ 5. Export some arguments into main as env variables in start.sh? 
  6. Test to see what happens when (in azureDeploy.json) we set autoscale min to 1...does webhook get triggered?
     In AWS the trigger message was different.
  7. Add error checking
