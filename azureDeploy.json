@@ -224,7 +224,7 @@
       "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
   }        
     },     
-    "CustomDataField": "concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]",
+    "CustomDataField": "[concat['storage-account=', parameters('customstorageaccount'), 'access-key=', parameters('customaccesskey'), 'file-share=', parameters('customfileshare')]]",
     "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
     "space": " ",
     "workerDnsLabel": "[concat('worker', variables('namingInfix'))]"
