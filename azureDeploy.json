@@ -65,7 +65,7 @@
     },
     "adminPassword": {
       "type": "securestring",
-      "defaultValue": "demopassword",
+      "defaultValue": "Dem0pa$$w0rd",
       "metadata": {
         "description": "Admin password on all VMs."
       }
@@ -100,7 +100,7 @@
              "metadata":{
                 "description": "API key for firewall"
              },
-             "defaultValue":"LUFRPT1Zd2pYUGpkMUNrVEZlb3hROEQyUm95dXNGRkU9N0d4RGpTN2VZaVZYMVVoS253U0p6dlk3MkM0SDFySEh2UUR4Y3hzK2g3ST0="
+             "defaultValue":"LUFRPT15aytCTDhIemdxYjJmUVNCdGhWNXBWTFBvR2s9c1didGUzbDV6VEVPOEh1cHVUdWN1N3dzeVY3TFFRUU8vL3VjUWo4Qmg5cz0="
     },
     "vmScaleSetMinCount": {
       "type": "int",
