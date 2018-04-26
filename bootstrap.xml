@@ -2,7 +2,7 @@
 <config version="7.1.0" urldb="paloaltonetworks">
   <mgt-config>
     <users>
-      <entry name="admin">
+      <entry name="pandemo">
         <phash>*****</phash>
         <permissions>
           <role-based>
@@ -16,7 +16,7 @@
             <superuser>yes</superuser>
           </role-based>
         </permissions>
-        <phash>$1$hqikhfkl$1Z1t7bvONQJM1IAh0erho1</phash>
+        <phash>$1$cxkavtja$ovYYOPR0sNygNfAUCONO4/</phash>
       </entry>
     </users>
   </mgt-config>
