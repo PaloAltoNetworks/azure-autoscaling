@@ -88,6 +88,12 @@
               "description": "File Share containing bootstrap files"
             }
       },
+      "customsharedirectory": {
+        "type": "string",
+        "metadata":{
+          "description": "(OPTIONAL) Directory name under File Share containing bootstrap files"
+        }
+  },
     "ApiKey": {
              "type": "securestring",
              "metadata":{
@@ -224,7 +230,7 @@
       "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
   }        
     },     
-    "CustomDataField": "[concat('storage-account=', parameters('customstorageaccount'), ',access-key=', parameters('customaccesskey'), ',file-share=', parameters('customfileshare'))]",
+    "CustomDataField": "[concat('storage-account=', parameters('customstorageaccount'), ',access-key=', parameters('customaccesskey'), ',file-share=', parameters('customfileshare'),',share-directory=', parameters('customsharedirectory'))]",
     "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
     "space": " ",
     "workerDnsLabel": "[concat('worker', variables('namingInfix'))]"
