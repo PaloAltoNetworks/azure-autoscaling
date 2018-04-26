@@ -90,6 +90,7 @@
       },
       "customsharedirectory": {
         "type": "string",
+        "defaultValue": "",
         "metadata":{
           "description": "(OPTIONAL) Directory name under File Share containing bootstrap files"
         }
