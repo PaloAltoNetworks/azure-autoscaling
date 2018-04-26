@@ -58,14 +58,14 @@
     },
     "adminUsername": {
       "type": "string",
-      "defaultValue": "paloalto",
+      "defaultValue": "pandemo",
       "metadata": {
         "description": "Admin username on all VMs."
       }
     },
     "adminPassword": {
       "type": "securestring",
-      "defaultValue": "Pal0Alt0@123",
+      "defaultValue": "demopassword",
       "metadata": {
         "description": "Admin password on all VMs."
       }
@@ -99,7 +99,8 @@
              "type": "securestring",
              "metadata":{
                 "description": "API key for firewall"
-             }
+             },
+             "default":"LUFRPT1Zd2pYUGpkMUNrVEZlb3hROEQyUm95dXNGRkU9N0d4RGpTN2VZaVZYMVVoS253U0p6dlk3MkM0SDFySEh2UUR4Y3hzK2g3ST0="
     },
     "vmScaleSetMinCount": {
       "type": "int",
