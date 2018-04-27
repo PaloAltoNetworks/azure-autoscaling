@@ -278,36 +278,60 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
 
        #PUSH NAT RULE OR UPDATE THE NAT ADDRESS OBJECTS
        cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AZ-NAT-ILB'><description>ILB-IP-address</description><ip-netmask>"+ilb_ip+"</ip-netmask></entry>"
-       logger.info("[INFO]: Pushing ILB NAT RULE")
+       logger.info("[INFO]: Pushing ILB NAT RULE {}".format(cmd))
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
             logger.info("[INFO]: Push NAT Address reponse: {}".format(e))
             sys.exit(0)
-         
+       logger.info("[INFO]: Response {}".format(response))
+       resp_header = et.fromstring(response)
+       if resp_header.attrib['status'] == 'error':
+           logger.info("[ERROR]: Error when setting NAT ADDRESS OBJECT")
+           sys.exit(0)
+
        cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AZ-NAT-UNTRUST'><description>UNTRUST-IP-address</description><ip-netmask>"+scaled_fw_untrust_ip+"</ip-netmask></entry>"
-       logger.info("[INFO]: Updating Untrust ip address for NAT rule")
+       logger.info("[INFO]: Updating Untrust ip address for NAT rule {}".format(cmd))
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
-       
-       logger.info("[INFO]: Enable azure metric push")
+       logger.info("[INFO]: Response {}".format(response))
+       resp_header = et.fromstring(response)
+       if resp_header.attrib['status'] == 'error':
+           logger.info("[ERROR]: Error when setting UNTRUST ADDRESS OBJECT")
+           sys.exit(0)
+
+
        cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/deviceconfig/setting/azure-advanced-metrics&element=<enable>yes</enable>"
+       logger.info("[INFO]: Enable azure metric push {}".format(cmd))
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
-       
-       logger.info("[INFO]: Push instrumentation key {} to firewall".format(instrumentation_key))
+       logger.info("[INFO]: Response {}".format(response))
+       resp_header = et.fromstring(response)
+       if resp_header.attrib['status'] == 'error':
+           logger.info("[ERROR]: Error when enabling metric push")
+           sys.exit(0)
+
+
+
        cmd="https://"+scaled_fw_ip+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/deviceconfig/setting/azure-advanced-metrics&element=<instrumentation-key>"+instrumentation_key+"</instrumentation-key>"
+       logger.info("[INFO]: Push instrumentation key {}".format(cmd))
        try:
             response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
        except Exception as e:
             logger.info("[INFO]: Untrust object update response: {}".format(e))
             sys.exit(0)
+       logger.info("[INFO]: Response {}".format(response))
+       resp_header = et.fromstring(response)
+       if resp_header.attrib['status'] == 'error':
+           logger.info("[ERROR]: Error pushing instrumentation key")
+           sys.exit(0)
+
 
        logger.info("[INFO]: Sending commit to firewall...Good Luck!!")
        cmd="https://"+scaled_fw_ip+"/api/?type=commit&cmd=<commit></commit>&key="+api_key
@@ -316,7 +340,11 @@ def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
        except Exception as e:
             logger.info("[ERROR]: Commit error: {}".format(e))
             sys.exit(0)
-    
+       logger.info("[INFO]: Response {}".format(response))
+       resp_header = et.fromstring(response)
+       if resp_header.attrib['status'] == 'error':
+           logger.info("[ERROR]: Error when sending commit command")
+           sys.exit(0)    
     
 def main():
         global ilb_ip
