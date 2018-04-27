@@ -699,5 +699,12 @@
             "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('vmssName'))]"
         }
     }
-  ]
+  ],
+  "outputs":
+  {
+      "CustomData":{
+        "type": "string",
+        "value":"[variables('CustomDataField')]"
+      }
+  }
 }
