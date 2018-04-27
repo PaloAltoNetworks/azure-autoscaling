@@ -179,7 +179,7 @@
     "nicNameMgmt": "[concat('nicmgmt', variables('namingInfix'))]",
     "nicNameUntrust": "[concat('nicuntrust', variables('namingInfix'))]",
     "nicNameTrust": "[concat('nictrust', variables('namingInfix'))]",
-    "nicNameWorker": "[concat ('wrokernic', variables('namingInfix'))]",
+    "nicNameWorker": "[concat ('workernic', variables('namingInfix'))]",
     "ipConfigNameuntrust": "[concat('ipconfiguntrust', variables('namingInfix'))]",
     "ipConfigNametrust": "[concat('ipconfigtrust', variables('namingInfix'))]",
     "ipConfigNamemgmt": "[concat('ipconfigmgmt', variables('namingInfix'))]",
