@@ -12,6 +12,7 @@ import collections
 import itertools
 import time
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import SocketServer, BaseHTTPServer
 import threading
 
 
@@ -166,7 +167,8 @@ def check_job_status(ip_to_monitor, job_id):
                         else:
                             return 'pending'
 
-
+class ThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    """Handle requests in a separate thread."""
 
 class ServerHandler(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -175,11 +177,13 @@ class ServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        self._set_headers()
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+        #self._set_headers()
+        #self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+        pass
 
     def do_HEAD(self):
-        self._set_headers()
+        #self._set_headers()
+        pass
         
     def do_POST(self):
         # Doesn't do anything with posted data
@@ -187,7 +191,7 @@ class ServerHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
         self._set_headers()
         self.wfile.write("<html><body><h1>POST!</h1></body></html>")
-        index(post_data)
+        process_post(post_data)
         
 def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
         server_address = ('0.0.0.0', port)
@@ -196,7 +200,7 @@ def run(server_class=HTTPServer, handler_class=ServerHandler, port=80):
         httpd.serve_forever()
 
 
-def index(postdata):
+def process_post(postdata):
     data=json.loads(postdata)
     logger.info("DATA {}".format(data))
 
@@ -230,8 +234,9 @@ def index(postdata):
        mgmt_ip = instance_list[instance_id]['mgmt-ip']
        untrust_ip = instance_list[instance_id]['untrust-ip']
        logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
-       t1 = threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,))
-       t1.start()
+       firewall_scale_up(mgmt_ip, untrust_ip)
+       #t1 = threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,))
+       #t1.start()
        return "<h1>Hello World!</h1>"
     ##SCALE IN
     elif  'operation' in data and data['operation'] == 'Scale In':
@@ -363,10 +368,13 @@ def main():
         logger.info("[INFO]: Show resources {}".format(command))
         instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
         logger.info("[INFO]: Instrumentation Key {}".format(instrumentation_key))
-        run()
+        #run()
         #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
-        while threading.active_count() > 0:
-            time.sleep(1)
+        #while threading.active_count() > 0:
+        #    time.sleep(1)
+        server = ThreadedHTTPServer(('0.0.0.0', 80), ServerHandler)
+        print 'Starting server, use <Ctrl-C> to stop'
+        server.serve_forever()
 
 if __name__ == "__main__":
         main()
