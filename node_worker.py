@@ -366,7 +366,9 @@ def main():
         logger.info("[INFO]: output of az login {}".format(proc_stdout))
         command = 'az resource show -g ' + sys.argv[7] + ' --resource-type microsoft.insights/components -n ' + sys.argv[6] + ' --query properties.InstrumentationKey -o tsv'
         logger.info("[INFO]: Show resources {}".format(command))
-        instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
+        #instrumentation_key = subprocess.check_output(shlex.split(command)).rstrip()
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        instrumentation_key = process.communicate()[0].strip()
         logger.info("[INFO]: Instrumentation Key {}".format(instrumentation_key))
         #run()
         #Keep main thread alive until all threads are done. the HTTPServer should still be listening.

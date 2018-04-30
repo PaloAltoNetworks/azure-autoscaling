@@ -30,8 +30,11 @@ def main():
         logger1.info("[INFO]: output of az login {}".format(proc_stdout))
         command = 'az resource show -g ' + sys.argv[7] + ' --resource-type microsoft.insights/components -n ' + sys.argv[6] + ' --query properties.InstrumentationKey -o tsv'
         logger1.info("[INFO]: Show resources {}".format(command))
-        inst_key = subprocess.check_output(shlex.split(command)).rstrip()
+        #inst_key = subprocess.check_output(shlex.split(command)).rstrip()
+        process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+        inst_key = process.communicate()[0].strip()
         logger1.info("[INFO]: output of az resource show {}".format(inst_key))
+
         logger1.info("[INFO]: publishing metrics {}".format(metric_list))
         tc = TelemetryClient(inst_key.rstrip())
 
