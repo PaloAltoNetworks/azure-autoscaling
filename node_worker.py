@@ -231,7 +231,7 @@ def process_post(postdata):
                 untrust_ip = instance_list[instance_id]['untrust-ip']
                 logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
                 #firewall_scale_up(mgmt_ip, untrust_ip)
-                threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,)).start()
+                threading.Thread(name='firewall_scale_up'+instance_id,target=firewall_scale_up, args=(mgmt_ip, untrust_ip,)).start()
                 #t.start()
            else:
                 #logger.info("[inside elif]: {}\n".format(i))
