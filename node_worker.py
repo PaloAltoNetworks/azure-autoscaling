@@ -227,16 +227,16 @@ def process_post(postdata):
               
                 logger.info("[INFO]: Instance ID: {}: mgmt ip: {}".format(instance_id, instance_list[instance_id]['mgmt-ip']))
                 logger.info("[INFO]: Instance ID: {}: untrust ip {} ".format(instance_id, instance_list[instance_id]['untrust-ip']))
+                mgmt_ip = instance_list[instance_id]['mgmt-ip']
+                untrust_ip = instance_list[instance_id]['untrust-ip']
+                logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
+                #firewall_scale_up(mgmt_ip, untrust_ip)
+                threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,)).start()
+                #t.start()
            else:
                 #logger.info("[inside elif]: {}\n".format(i))
                 logger.info("[INFO]:  instance ID {} not in Creating state or already exists in database".format(i['instanceId']))
                 continue 
-       mgmt_ip = instance_list[instance_id]['mgmt-ip']
-       untrust_ip = instance_list[instance_id]['untrust-ip']
-       logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
-       firewall_scale_up(mgmt_ip, untrust_ip)
-       #t1 = threading.Thread(name='firewall_scale_up',target=firewall_scale_up, args=(mgmt_ip, untrust_ip,))
-       #t1.start()
        return "<h1>Hello World!</h1>"
     ##SCALE IN
     elif  'operation' in data and data['operation'] == 'Scale In':
@@ -371,12 +371,13 @@ def main():
         instrumentation_key = process.communicate()[0].strip()
         logger.info("[INFO]: Instrumentation Key {}".format(instrumentation_key))
         #run()
-        #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
-        #while threading.active_count() > 0:
-        #    time.sleep(1)
+
         server = ThreadedHTTPServer(('0.0.0.0', 80), ServerHandler)
         print 'Starting server, use <Ctrl-C> to stop'
         server.serve_forever()
+        #Keep main thread alive until all threads are done. the HTTPServer should still be listening.
+        while threading.active_count() > 0:
+            time.sleep(1)
 
 if __name__ == "__main__":
         main()
