@@ -249,15 +249,21 @@ def process_post(postdata):
         logger.info("[INFO]: SCALE IN list instances output {}". format(x))
         for i in x:
             if i['provisioningState'] == 'Deleting' and int(i['instanceId']) in instance_list: #This is the instance being scaled in
-                logger.info("[INFO]: Instance {} is getting scaled in...so popping it off the list".format(i['instanceId']))
+                logger.info("[INFO]: Instance {} is getting scaled in...starting thrread to pop it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
-                #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE                
-                instance_list.pop(instance_id)
+                #instance_list.pop(instance_id)
+                threading.Thread(name='firewall_scale_down'+instance_id,target=firewall_scale_down, args=(instance_id,)).start()
             else:
                 logger.info("[INFO]: Instance ID {} not being scaled in".format(i['instanceId']))
                 continue
         return "<h1>Bye Bye World!</h1>"
 
+def firewall_scale_down(scaled_instance_id):
+    global instance_list
+    logger.info("[INFO]: Instance {} is getting scaled in...so popping it off the list".format(scaled_instance_id))
+    #IF BYOL DELETE AND TELL PANORAMA TO DELICENSE...WE KNOW IP ADDRESS FROM HERE
+    instance_list.pop(scaled_instance_id)
+    
 
 def firewall_scale_up(scaled_fw_ip, scaled_fw_untrust_ip):
        global ilb_ip
