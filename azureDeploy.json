@@ -5,7 +5,6 @@
     "vmSku": {
        "type": "string",
        "allowedValues": [
-          "byol",
           "bundle1",
           "bundle2"
        ],
