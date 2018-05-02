@@ -231,7 +231,7 @@ def process_post(postdata):
                 untrust_ip = instance_list[instance_id]['untrust-ip']
                 logger.info("[INFO]: starting thread to check firewall with ip {}".format(mgmt_ip))
                 #firewall_scale_up(mgmt_ip, untrust_ip)
-                threading.Thread(name='firewall_scale_up'+instance_id,target=firewall_scale_up, args=(mgmt_ip, untrust_ip,)).start()
+                threading.Thread(name='firewall_scale_up'+str(instance_id),target=firewall_scale_up, args=(mgmt_ip, untrust_ip,)).start()
                 #t.start()
            else:
                 #logger.info("[inside elif]: {}\n".format(i))
@@ -252,7 +252,7 @@ def process_post(postdata):
                 logger.info("[INFO]: Instance {} is getting scaled in...starting thrread to pop it off the list".format(i['instanceId']))
                 instance_id = int(i['instanceId'])
                 #instance_list.pop(instance_id)
-                threading.Thread(name='firewall_scale_down'+instance_id,target=firewall_scale_down, args=(instance_id,)).start()
+                threading.Thread(name='firewall_scale_down'+str(instance_id),target=firewall_scale_down, args=(instance_id,)).start()
             else:
                 logger.info("[INFO]: Instance ID {} not being scaled in".format(i['instanceId']))
                 continue
