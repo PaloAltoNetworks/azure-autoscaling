@@ -3,7 +3,7 @@ Azure autoscaling solution using VMSS and AppInsights
 
 This is work in progress...
 
-# Service principal needs to be owner...contributor role will not work
+# Service principal needs to be owner or reader...contributor role will not work
 # Supports PAYG bundle1/bundle2 only for now
 
 ## TO DO
