@@ -1,6 +1,8 @@
 # azure-autoscaling
 Azure autoscaling solution using VMSS and AppInsights
 
+![alt_text](topology.png)
+
 This is work in progress...
 
 # Service principal needs to be owner or reader...contributor role will not work
