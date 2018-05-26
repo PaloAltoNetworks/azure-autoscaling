@@ -454,6 +454,7 @@
             "apiVersion": "[variables('networkApiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicNameWorker')]",
+            "location": "[variables('location')]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/SetupVNET"
             ],
@@ -461,10 +462,10 @@
                 "ipConfigurations": [{
                     "name": "ipconfig-worker",
                     "properties": {
-                        "privateIPAllocationMethod": "Dynamic"
-                    },
-                    "subnet": {
-                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('MgmtSubnetName'))]"
+                        "privateIPAllocationMethod": "Dynamic",
+                        "subnet": {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('MgmtSubnetName'))]"
+                        }
                     }
                 }]
             }
@@ -473,8 +474,10 @@
             "apiVersion": "[variables('computeApiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('workerName')]",
+            "location": "[variables('location')]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/SetupVNET",
+                "Microsoft.Resources/deployments/SettingUpStorageAccount",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWorker'))]"
             ],
             "properties": {
@@ -496,7 +499,7 @@
                     "osDisk": {
                         "name": "worker-osdisk",
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), variables('networkApiVersion')).primaryEndpoints.blob,'vhds/osdisk.vhd')]"
+                            "uri": "[concat('https://', parameters('storageAccountName'), '.blob.core.windows.net/vhds/tempworker.vhd')]"
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
@@ -516,6 +519,7 @@
             "name": "[concat(variables('workerName'),'/vm-customscript')]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "[variables('computeApiVersion')]",
+            "location": "[variables('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('workerName'))]"
             ],
@@ -538,7 +542,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/SetupVNET"
+                "Microsoft.Resources/deployments/SetupVNET",
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('workerName'),'vm-customscript')]"
             ],
             "properties": {
                 "mode": "Incremental",

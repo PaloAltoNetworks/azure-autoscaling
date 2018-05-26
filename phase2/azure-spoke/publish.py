@@ -14,26 +14,21 @@ logging.basicConfig(filename=LOG_FILENAME1,level=logging.INFO, filemode='w',form
 logger1 = logging.getLogger(__name__)
 logger1.setLevel(logging.INFO)
 
-metric_list = ["DataPlaneCPUUtilizationPct",\
+metric_list = [ "panSessionActive",\
+                "DataPlaneCPUUtilizationPct",\
                 "panGPGatewayUtilizationPct",\
                 "panGPGWUtilizationActiveTunnels",\
                 "DataPlanePacketBufferUtilization",\
-                "panSessionActive",\
                 "panSessionSslProxyUtilization",\
                 "panSessionUtilization"]
 def main():
         inst_key = sys.argv[1].strip()
-        logger1.info("[INFO]: output of az resource show {}".format(inst_key))
-
-        logger1.info("[INFO]: publishing metrics {}".format(metric_list))
-        tc = TelemetryClient(inst_key.rstrip())
+        tc = TelemetryClient(inst_key)
 
         for metric in metric_list:
             tc.track_metric(metric, 0)
             tc.flush()
-            tc.track_metric(metric, 0)        
-            tc.flush()
-            time.sleep(10)
+            time.sleep(30)
 
 if __name__ == "__main__":
     main()
