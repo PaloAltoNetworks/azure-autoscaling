@@ -78,7 +78,7 @@
              "value": "rrspoke1mgmt"
         },
         "storageAccountName": {
-            "value": "rrspoke1storage"
+            "value": "rrspoke5storage"
         },
         "storageAccountType": {
             "value": "Standard_LRS"

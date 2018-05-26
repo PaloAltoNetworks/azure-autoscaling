@@ -25,10 +25,14 @@ def main():
         inst_key = sys.argv[1].strip()
         tc = TelemetryClient(inst_key)
 
+        logger1.info("[INFO]: Instrumentation key used {}".format(inst_key))
+
         for metric in metric_list:
+            logger1.info("[INFO]: Publishing metrics {}".format(metric))
             tc.track_metric(metric, 0)
             tc.flush()
             time.sleep(30)
+
 
 if __name__ == "__main__":
     main()

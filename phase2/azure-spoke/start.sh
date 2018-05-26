@@ -4,6 +4,7 @@ apt-get update &&
 apt-get install -y python-pip &&
 pip install azure-cli applicationinsights &&
 #export these as environment variables?
-cat $1 >> temp_appinsights.key
+echo $1 >> temp_appinsights.key
 ./publish.py $1 &&
-sleep 60
+sleep 60 && 
+shutdown --no-wall -P +30
