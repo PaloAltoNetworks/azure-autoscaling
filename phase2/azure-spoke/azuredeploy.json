@@ -281,7 +281,7 @@
 		"rgname" : "[resourceGroup().name]",
 		"LoadBalancerType" : "layer-7",
 		"firewallVmCount" : 2,
-		"baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/Azure-Transit-VNet/master/azure-pan-spoke",
+		"baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-spoke",
 		"nsgURL" : "[concat(variables('baseUrl'),'/nsg-new.json')]",
 		"vnetURL" : "[concat(variables('baseUrl'),'/deployVnet.json')]",
 		"publicLBURL" : "[concat(variables('baseUrl'),'/public-lb-', variables('LoadBalancerType'), '.json')]",
@@ -290,14 +290,15 @@
 		"vnetPeeringURL": "[concat(variables('baseUrl'), '/deployVnetPeering.json')]",
 		"defaultUdrSetupURL": "[concat(variables('baseUrl'), '/deployDefaultUDR.json')]",
 		"vmseriesURL" : "[concat(variables('baseUrl'),'/vmseries.json')]",
-        "appInsightsApiVersion": "2015-05-01", 
-        "appInsightsComponentsApiVersion": "2015-05-01",
+        "appInsightsApiVersion": "2018-05-01", 
+        "appInsightsComponentsApiVersion": "2018-05-01",
         "networkApiVersion": "2017-06-01",
         "computeApiVersion": "2017-03-30",
         "appInsightsName": "[concat(parameters('appInsights'),variables('namingInfix'))]",
         "appInsightsUrl": "[concat(variables('baseUrl'),'/deployAppInsights.json')]",
         "nicNameWorker": "[concat('tempworkernic', variables('namingInfix'))]",
-        "workerName": "[concat('tempworker', variables('namingInfix'))]"
+        "workerName": "[concat('tempworker', variables('namingInfix'))]",
+        "space": " "
 	},
 	"resources": [
         {
@@ -532,7 +533,7 @@
                         "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-spoke/publish.py",
                         "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-spoke/start.sh"
                     ],
-                    "commandToExecute": "[concat('/bin/bash ./start.sh ', variables('space'), parameters('ServicePrincipal'), variables('space'), parameters('ClientSecret'), variables('space') ,parameters('TenantId'), variables('space') , parameters('ApiKey'), variables('space'), parameters('ILBAddress'), variables('space'), variables('appInsightsName'), variables('space'), variables('resourceGroupName'), '&')]"
+                    "commandToExecute": "[concat('/bin/bash ./start.sh ', variables('space'), reference('SetupAppInsights').outputs.instrumentationKey.value, variables('space'), '&')]"
                 }
             }
         },
