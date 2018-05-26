@@ -305,7 +305,6 @@
             "name": "SetupAppInsights",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('appInsightsApiVersion')]",
-            "location": "[resourceGroup().location]",
 			"properties": { 
 				"mode": "Incremental",
 				"templateLink": {
@@ -455,7 +454,6 @@
             "apiVersion": "[variables('networkApiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicNameWorker')]",
-            "location": "[resourceGroup().location]",
             "dependsOn": [
 				"Microsoft.Resources/deployments/SetupVNET"
             ],
@@ -475,7 +473,6 @@
             "apiVersion": "[variables('computeApiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('workerName')]",
-            "location": "[resourceGroup().location]",
             "dependsOn": [
 				"Microsoft.Resources/deployments/SetupVNET",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWorker'))]"
@@ -519,7 +516,6 @@
             "name": "[concat(variables('workerName'),'/vm-customscript')]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "[variables('computeApiVersion')]",
-            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('workerName'))]"
             ],

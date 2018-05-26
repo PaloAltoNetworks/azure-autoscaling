@@ -2,26 +2,113 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "networkSecurityGroupInboundSrcIP": {
-      "value": "0.0.0.0/0"
-    },
-    "virtualNetworkAddressPrefix": {
-      "value": "192.168.0.0/16"
-    },
-    "virtualNetworkNewOrExisting": {
-      "value": "existing"
-    },
-    "username": {
-      "value": "DEFAULT-USER"
-    },
-    "password": {
-      "value": "DEFAULT-PASSWORD"
-    },
-    "storageAccountName": {
-      "value": "DEFAULT-STORAGE"
-    },
-    "storageAccountNewOrExisting": {
-      "value": "existing"
-    }
+		"hubResourceGroupName": {
+			"value": "rr-hub-scale"
+		},
+		"hubVnetName": {
+            "value": "hubvnet"
+		},
+		"hubLoadBalancerIP": {
+            "value": "10.0.2.4"
+		},
+		"networkSecurityGroupName": {
+			"value": "nsg-mgmt"
+		},
+		"networkSecurityGroupInboundSrcIP": {
+		 	"value": "1.1.1.1/32"
+		},
+		"virtualNetworkName": {
+			"value": "rr-spoke-vnet1"
+		},
+		"virtualNetworkAddressPrefix": {
+			"value": "192.168.0.0/21"
+		},
+		"MgmtSubnetName": {
+			"Value": "Mgmt"
+		},
+		"mgmtSubnetPrefix": {
+			"value": "192.168.0.0/24"
+        },
+		"untrustedSubnetName": {
+			"value": "Untrust"
+		},
+		"untrustedSubnetPrefix": {
+			"value": "192.168.1.0/24"
+		},
+		"trustedSubnetName": {
+			"value": "Trust"
+		},
+		"trustedSubnetPrefix": {
+			"value": "192.168.2.0/24"
+		},
+		"appGatewayName": {
+			"value": "myAppGw"
+		},
+		"appGatewayDnsName": {
+            "value": "rrspoke1appgw"
+		},
+		"appGatewaySubnetName": {
+			"value": "AppGWSubnet"
+		},
+		"appGatewaySubnetPrefix": {
+			"value": "192.168.3.0/24"
+		},
+		"internalLoadBalancerName": {
+			"value": "myPrivateLB"
+		},
+		"backendSubnetName": {
+			"Value": "backendSubnet"
+		},
+		"backendSubnetPrefix": {
+			"value": "192.168.4.0/24"
+		},
+		"backendVmSize": {
+			 "value": "Standard_D1_v2"
+		},
+		"firewallModel": {
+			 "value": "byol"
+		},
+		"firewallVmName": {
+			 "value": "VM-Series"
+		},
+		"firewallVmSize": {
+			 "value": "Standard_D3_v2"
+		},
+		"MgmtPublicIPAddressName": {
+			 "value": "rrspoke1mgmt"
+        },
+		"storageAccountName": {
+            "value": "rrspoke1storage"
+		},
+		"storageAccountType": {
+			"value": "Standard_LRS"
+		},
+		"username": {
+			"value": "pandemo"
+		},
+		"authenticationType": {
+			"value": "password"
+		},
+		"password": {
+			"value": "Dem0pa$$w0rd"
+		},
+		"sshPublicKey": {
+			"value": ""
+		},
+        "customstorageaccount": {
+            "value": "abc"
+        },
+        "customaccesskey": {
+            "value": "abc"
+        },
+        "customfileshare": {
+            "value": "abc"
+        },
+        "customsharedirectory": {
+            "value": ""
+        },
+        "appInsights": {
+            "value": "rrspoke1appinsights"
+        }
   }
 }
