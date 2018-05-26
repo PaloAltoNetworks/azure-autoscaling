@@ -8,9 +8,7 @@
         }
     },
     "variables": {
-        [
         "appInsightsApiVersion": "2018-05-01"
-        ]
     },
     "resources": [
         {
