@@ -42,10 +42,22 @@
 			},
 			"defaultValue": "1.1.1.1/32"
 		},
+        "imageVersion": {
+            "type": "string",
+            "allowedValues": [
+                "latest",
+                "8.1.0",
+                "8.0.0"
+                ],
+            "defaultValue": "latest",
+            "metadata": {
+                "description": "PAN OS Version"
+            }
+        },
 		"avSetName": {
 			"type": "string",
 			"metadata": {
-				"description": "Name of the availability set for outbound firewall"
+				"description": "Not required - Name of the availability set for outbound firewall"
 			},
 			"defaultValue": "outbound-avset"
 		},
@@ -211,7 +223,6 @@
 		},
         "subscriptionId": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
 				"description": "Account subscription id - https://blogs.msdn.microsoft.com/mschray/2016/03/18/getting-your-azure-subscription-guid-new-portal/"
             }
@@ -233,6 +244,49 @@
             "metadata": {
                 "description": "Tenant ID for service principal"
             }
+        },
+        "apiKey": {
+            "type": "securestring",
+            "metadata":{
+                "description": "API key for firewall"
+            },
+            "defaultValue":"LUFRPT15aytCTDhIemdxYjJmUVNCdGhWNXBWTFBvR2s9c1didGUzbDV6VEVPOEh1cHVUdWN1N3dzeVY3TFFRUU8vL3VjUWo4Qmg5cz0="
+        },
+        "vmScaleSetMinCount": {
+            "type": "int",
+            "defaultValue": 0, 
+            "metadata": {
+                "description": "The minimum (and default) number of FWs that will be deployed into the VM Scale Set."
+              }
+        }, 
+        "vmScaleSetMaxCount": {
+            "type": "int",
+            "defaultValue": 3, 
+            "metadata": {
+                "description": "The maximum number of FWs that can be deployed into the VM Scale Set."
+            }
+        },
+        "autoScaleMetric": {
+            "type": "string",
+            "allowedValues": [
+                "Data Plane CPU Utilization %", 
+                "GP Gateway Utilization %",
+                "GP Gateway Active Tunnels",
+                "Data Plane Packet Buffer Utilization %",
+                "Active Sessions",
+                "SSL Proxy Session Utilization %",
+                "Session Utilization %"                  
+                ], 
+            "defaultValue": "Active Sessions", 
+            "metadata": {
+                "description": "Select the metric on which auto scale events should be triggered."
+            } 
+        },
+        "appInsights": {
+            "type" : "string",
+            "metadata": {
+                "description": "Enter the name for your  Application Insights environment"
+            }
         }
 	},
 	
@@ -244,9 +298,52 @@
 		"deployFirewallURL"    : "[concat(variables('baseUrl'),'/deployFirewall.json')]",
 		"deployLoadBalancerURL": "[concat(variables('baseUrl'),'/deployLoadBalancer.json')]",
 
+        "networkApiVersion": "2017-06-01",
+        "computeApiVersion": "2017-03-30",
+        "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
 		"location"   : "[resourceGroup().location]",
 		"rgname"     : "[resourceGroup().name]",
-		"storageName": "[toLower(concat(parameters('storageName')))]"
+		"storageName": "[toLower(concat(parameters('storageName')))]",
+
+        "nicNameWorker": "[concat ('workernic', variables('namingInfix'))]",
+        "WorkerPublicIPAddressName": "[concat('workerPip', variables('namingInfix'))]",
+        "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
+
+        "appInsightsApiVersion": "2015-05-01", 
+        "appInsightsComponentsApiVersion": "2015-05-01",
+        "appInsightsName": "[concat(parameters('appInsights'),variables('namingInfix'))]", 
+        "appInsightsNameArray": "[split(concat(variables('appInsightsName'), ';', variables('resourceGroupName')) , ';')]", 
+        "autoScaleMetric": "[parameters('autoScaleMetric')]", 
+        "scaleMetricMap": {
+            "Data Plane CPU Utilization %": {
+                "metricName": "customMetrics/DataPlaneCPUUtilizationPct", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            }, 
+            "GP Gateway Utilization %": {
+                "metricName": "customMetrics/panGPGatewayUtilizationPct", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            }, 
+            "GP Gateway Active Tunnels": {
+                "metricName": "customMetrics/panGPGWUtilizationActiveTunnels", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            },
+            "Active Sessions": {
+                "metricName": "customMetrics/panSessionActive", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            },
+            "Data Plane Packet Buffer Utilization %": {
+                "metricName": "customMetrics/DataPlanePacketBufferUtilization", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            },
+            "SSL Proxy Session Utilization %": {
+                "metricName": "customMetrics/panSessionSslProxyUtilization", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            },
+            "Session Utilization %": {
+                "metricName": "customMetrics/panSessionUtilization", 
+                "metricResourceUri": "[resourceId(variables('appInsightsNameArray')[1], 'Microsoft.Insights/components', variables('appInsightsNameArray')[0])]"
+            }
+        }        
 	},
 
 	"resources": [
@@ -273,6 +370,16 @@
 				}
 			}
 		},
+        {
+            "name": "[variables('appInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "kind": "web",
+            "apiVersion": "[variables('appInsightsApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "Application_Type": "web"
+            }
+        },
 		{	
 			"name": "deployNsg",
 			"type": "Microsoft.Resources/deployments",
@@ -299,6 +406,111 @@
 				}
 			}
 		},
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('WorkerPublicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[variables('networkApiVersion')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "apiVersion": "[variables('networkApiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicNameWorker')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+				"Microsoft.Resources/deployments/deployVNet",
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('WorkerPublicIPAddressName'))]"
+                ],
+            "tags": {
+                "displayName": "[variables('nicNameWorker')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig-worker",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerPublicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('mgmtSubnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('computeApiVersion')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('worker-node-name')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+				"Microsoft.Resources/deployments/deployVNet",
+                "[concat('Microsoft.Insights/components/', variables('appInsightsName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWorker'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A1"
+                },
+                "osProfile": {
+                    "computername": "[variables('worker-node-name')]",
+                    "adminUsername": "[parameters('username')]",
+                    "adminPassword": "[parameters('password')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "worker-osdisk",
+                        "vhd": {
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageName')), variables('networkApiVersion')).primaryEndpoints.blob,'vhds/osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicNameWorker'))]",
+                            "properties": { 
+                                "primary": true
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(variables('worker-node-name'),'/vm-customscript')]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "[variables('computeApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'))]"
+                ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "settings": {
+                    "fileUris": [
+                        "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/start.sh"
+                    ],
+                    "commandToExecute": "[concat('/bin/bash', './start.sh &')]"
+                }
+            }
+        },
 		{	
 			"name": "deployVnet",
 			"type": "Microsoft.Resources/deployments",
@@ -323,7 +535,7 @@
 						"value": "[parameters('virtualNetworkAddressPrefix')]"
 					},
 					"mgmtSubnetName": {
-						"value": "[parameters('MgmtSubnetName')]"
+						"value": "[parameters('mgmtSubnetName')]"
 					},
 					"untrustSubnetName": {
 						"value": "[parameters('untrustedSubnetName')]"
