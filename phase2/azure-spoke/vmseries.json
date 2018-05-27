@@ -241,7 +241,7 @@
                     "networkProfile": {
                         "networkInterfaceConfigurations": [
                         {
-                            "name": "[parameters('nicNameMgmt')]",
+                            "name": "[variables('nicNameMgmt')]",
                             "properties": {
                                 "primary": "true",
                                 "ipConfigurations": [
