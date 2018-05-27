@@ -321,8 +321,8 @@
         "appInsightsUrl": "[concat(variables('baseUrl'),'/deployAppInsights.json')]",
         "nicNameWorker": "[concat('tempworkernic', variables('namingInfix'))]",
         "workerName": "[concat('tempworker', variables('namingInfix'))]",
-        "appGatewayName": "[concat(variables(rgname), '_app_gw_', variables('namingInfix'))]",
-        "appGwBackendPoolName": "[concat(variables(rgname), '_appGwBepool_', variables('namingInfix'))]",
+        "appGatewayName": "[concat(variables('rgname'), 'appgw', variables('namingInfix'))]",
+        "appGwBackendPoolName": "[concat(variables('rgname'), 'appGwBepool', variables('namingInfix'))]",
         "vmssName": "[concat('pavmfw', variables('namingInfix'))]",
         "customDataField": "[concat('storage-account=', parameters('customstorageaccount'), ',access-key=', parameters('customaccesskey'), ',file-share=', parameters('customfileshare'),',share-directory=', parameters('customsharedirectory'))]",
         "space": " "

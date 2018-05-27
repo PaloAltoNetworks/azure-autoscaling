@@ -41,9 +41,6 @@
         "trustedSubnetPrefix": {
             "value": "192.168.2.0/24"
         },
-        "appGatewayName": {
-            "value": "myAppGw"
-        },
         "appGatewayDnsName": {
             "value": "rrspoke1appgw"
         },

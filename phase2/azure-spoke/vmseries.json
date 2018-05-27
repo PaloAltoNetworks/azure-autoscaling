@@ -155,7 +155,6 @@
         "imagePublisher": "paloaltonetworks",
         "imageOffer" : "vmseries1",
         "version" : "latest",
-        "nicName": "[parameters('vmName')]",
         "location": "[resourceGroup().location]",
         "resourceGroupName": "[resourceGroup().name]", 
         "scaleMetricMap": {
