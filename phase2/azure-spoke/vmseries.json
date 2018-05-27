@@ -27,7 +27,7 @@
         },
         "vmScaleSetMinCount": {
             "type": "int",
-            "defaultValue": 0, 
+            "defaultValue": 1, 
             "metadata": {
                 "description": "The minimum (and default) number of FWs that will be deployed into the VM Scale Set."
             }

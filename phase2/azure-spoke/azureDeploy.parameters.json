@@ -18,7 +18,7 @@
              "value": "1.1.1.1/32"
         },
         "virtualNetworkName": {
-            "value": "rr-spoke-vnet1"
+            "value": "rr-spoke-vnet6"
         },
         "virtualNetworkAddressPrefix": {
             "value": "192.168.0.0/21"
@@ -42,7 +42,7 @@
             "value": "192.168.2.0/24"
         },
         "appGatewayDnsName": {
-            "value": "rrspoke1appgw"
+            "value": "rrspoke6appgw"
         },
         "appGatewaySubnetName": {
             "value": "AppGWSubnet"
@@ -72,10 +72,10 @@
              "value": "Standard_D3_v2"
         },
         "MgmtPublicIPAddressName": {
-             "value": "rrspoke1mgmt"
+             "value": "rrspoke6mgmt"
         },
         "storageAccountName": {
-            "value": "rrspoke5storage"
+            "value": "rrspoke6storage"
         },
         "storageAccountType": {
             "value": "Standard_LRS"
@@ -93,19 +93,19 @@
             "value": ""
         },
         "customstorageaccount": {
-            "value": "abc"
+            "value": "rrbootstrapstroage"
         },
         "customaccesskey": {
-            "value": "abc"
+            "value": "g48c91swtfOhJPu/+kg815SiF4xUP2SwRcvfC0RN7xxfBQVmsahPnxIIZWBzMQ8gfRYAU9baIDKYe9qSqDtBGQ=="
         },
         "customfileshare": {
-            "value": "abc"
+            "value": "rrbootstrapstorage"
         },
         "customsharedirectory": {
             "value": ""
         },
         "appInsights": {
-            "value": "rrspoke1appinsights"
+            "value": "rrspoke6appinsights"
         }
   }
 }
