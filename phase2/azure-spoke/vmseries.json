@@ -1,411 +1,376 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "lbName": {
-      "type": "string",
-      "metadata": {
-        "description": "Public Load Balancer name"
-      }
-    },
-    "vmCount": {
-       "type": "int",
-       "defaultValue": 2,
-       "metadata": {
-           "description": "Number of VM-Series firewall"
-       }
-    },
-    "vmName": {
-       "type": "string",
-       "metadata": {
-          "description": "Name of VM-Series VM in the Azure portal"
-       },
-       "defaultValue": "VM-Series"
-    },
-    "vmSize": {
-       "type": "string",
-       "allowedValues": [
-          "Standard_D3",
-          "Standard_D4",
-          "Standard_D3_v2",
-          "Standard_D4_v2",
-          "Standard_D5_v2",
-          "Standard_D14_v2", 
-          "Standard_A4"
-       ],
-       "metadata": {
-          "description": "Azure VM size for VM-Series"
-       },
-       "defaultValue": "Standard_D3"
-    },
-    "imageSku": {
-       "type": "string",
-       "allowedValues": [
-          "byol",
-          "bundle1",
-          "bundle2"
-       ],
-       "metadata": {
-          "description": "byol = Bring Your Own License; bundle1 = Bundle 1 PAYG (Hourly); bundle2 = Bundle 2 PAYG (Hourly)"
-       },
-       "defaultValue": "byol"
-    },
-    "virtualNetworkName": { 
-      "type": "string",
-      "metadata": {
-        "description": "Name of the Virtual Network (VNET)"
-      },
-      "defaultValue": "fwVNET"
-    },
-    "virtualNetworkExistingRGName": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Name of resource group of VNET (new or existing)"
-      }
-    },
-    "subnet0Name": {
-      "type": "string",
-      "defaultValue": "Mgmt",
-      "metadata": {
-        "description": "Subnet for Management"
-      }
-    },
-    "subnet1Name": {
-      "type": "string",
-      "defaultValue": "Untrust",
-      "metadata": {
-        "description": "Subnet for Untrust"
-      }
-    },
-    "subnet2Name": {
-      "type": "string",
-      "defaultValue": "Trust",
-      "metadata": {
-        "description": "Subnet for Trust"
-      }
-    },
-    "subnetLBName": {
-      "type": "string",
-      "defaultValue": "UntrustLB",
-      "metadata": {
-        "description": "Subnet for App Gateway"
-      }
-    },
-    "subnet0Prefix": {
-      "type": "string",
-      "defaultValue": "192.168.0.0/24",
-      "metadata": {
-        "description": "Mgmt subnet CIDR"
-      }
-    },
-    "subnet1Prefix": {
-      "type": "string",
-      "defaultValue": "192.168.1.0/24",
-      "metadata": {
-        "description": "Untrust subnet CIDR"
-      }
-    },
-    "subnet2Prefix": {
-      "type": "string",
-      "defaultValue": "192.168.2.0/24",
-      "metadata": {
-        "description": "Trust subnet CIDR"
-      }
-    },
-    "subnetLBPrefix": {
-      "type": "string",
-      "defaultValue": "192.168.3.0/24",
-      "metadata": {
-        "description": "App Gateway subnet CIDR"
-      }
-    },
-    "adminUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Username of the administrator account of VM-Series"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Password for the administrator account of VM-Series"
-      }
-    },
-    "baseUrl": {
-      "type": "string",
-      "metadata": {
-        "artifactsBaseUrl": "",
-        "description": "URL to acquire other VM-Series for Azure templates"
-      }
-    },
-    "MgmtPublicIPAddressName": {
-      "type": "string",
-      "defaultValue": "vm-servies-pib-mgmt",
-      "metadata": {
-        "description": "Name of public IP resource for mgmt interface"
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name prefix of the new storage account created to store the VM's disks"
-      }
-    },
-    "storageAccountNewOrExisting" : {
-       "type": "string",
-       "defaultValue" : "new",
-       "allowedValues" : [
-          "new",
-          "existing"
-       ],
-       "metadata": {
-          "Description": "Storage Account is new or existing"
-       }
-    },
-    "storageAccountType": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Premium_LRS",
-        "Standard_RAGRS"
-      ],
-      "metadata": {
-        "description": "Type of the storage account created"
-      },
-      "defaultValue": "Standard_LRS"
-    },
-    "Bootstrap": {
-      "type": "string",
-      "defaultValue" : "no",
-      "allowedValues": [
-        "yes",
-        "no"
-      ],
-      "metadata": {
-        "description": "Bootstrap disk yes or no"
-      }
-    },
-    "BootstrapUri": {
-      "type": "string",
-      "defaultValue" : "",
-      "metadata": {
-        "description": "Bootstrap disk storage account URI with container name"
-      }
-    },
-    "BootstrapUriSizeGB": {
-      "type": "string",
-      "defaultValue" : "1",
-      "metadata": {
-        "description": "Bootstrap disk disk in GB"
-      }
-    },
-    "authenticationType": {
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmssName": {
             "type": "string",
             "metadata": {
-                "description": "Type of administrator user authentication "
+                "description": "Name for your VMSS"
             },
-            "allowedValues": [
-                "sshPublicKey",
-                "password"
-            ],
-            "defaultValue": "password"
-    },
-    "sshKey": {
+            "maxLength": 57
+        },
+        "vmSize": {
             "type": "string",
-            "defaultValue": "",
+            "allowedValues": [
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_A4",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2"
+            ],
             "metadata": {
-                "description": "SSH rsa public key file as a string."
+                "description": "Azure VM size for VM-Series"
+            },
+            "defaultValue": "Standard_D3_v2"
+        },
+        "vmScaleSetMinCount": {
+            "type": "int",
+            "defaultValue": 0, 
+            "metadata": {
+                "description": "The minimum (and default) number of FWs that will be deployed into the VM Scale Set."
             }
-    }
-  },
-  "variables": {
-    "availabilitySetName": "[concat('firewallAvSet', substring(uniqueString(resourceGroup().id), 0, 4))]",
-    "rgname": "[resourceGroup().id]",
-    "imagePublisher": "paloaltonetworks",
-    "imageOffer" : "vmseries1",
-    "version" : "latest",
-    "nicName": "[parameters('vmName')]",
-    "publicIPAddressType": "Dynamic",
-    "nsgSetupURL" : "[concat(parameters('baseUrl'),'/nsg-new.json')]",
-    "SettingUpPublicIPUrl": "[concat(parameters('baseUrl'),'/deployPublicIP.json')]",
-    "setupNICsURL": "[concat(parameters('baseUrl'),'/setupNICS-new.json')]",
-    "vmTemplateUrl": "[concat(parameters('baseUrl'), '/virtual-machine-', parameters('authenticationType'),'-bs-', parameters('Bootstrap'), '.json')]",
-    "location": "[resourceGroup().location]"
+        }, 
+        "vmScaleSetMaxCount": {
+            "type": "int",
+            "defaultValue": 3, 
+            "metadata": {
+                "description": "The maximum number of FWs that can be deployed into the VM Scale Set."
+            }
+        },
+        "vmSku": {
+            "type": "string",
+            "allowedValues": [
+                "byol",
+                "bundle1",
+                "bundle2"
+            ],
+            "metadata": {
+                "description": "Firewall License Model"
+            },
+            "defaultValue": "byol"
+        },
+        "imageVersion": {
+            "type": "string",
+            "allowedValues": [
+                "latest",
+                "8.1.0",
+                "8.0.0"
+            ],
+            "defaultValue": "latest",
+            "metadata": {
+                "description": "PAN OS Version"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "pandemo",
+            "metadata": {
+                "description": "Admin username on all VMs."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "defaultValue": "Dem0pa$$w0rd",
+            "metadata": {
+                "description": "Admin password on all VMs."
+            }
+        },
+        "customDataField": {
+            "type": "string",
+            "metadata": {
+                "description": "Credentials required by the firewall VM bootstrap code to access the storage"
+            }
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "VNET name"
+            }
+        },
+        "subnetNameMgmt": {
+            "type": "string",
+            "metadata": {
+                "description": "Management Subnet name"
+            }
+        },
+        "subnetNameUntrust": {
+            "type": "string",
+            "metadata": {
+                "description": "Untrust Subnet name"
+            }
+        },
+        "subnetNameTrust": {
+            "type": "string",
+            "metadata": {
+                "description": "Trust Subnet name"
+            }
+        },
+        "appGwName": {
+            "type": "string",
+            "metadata": {
+                "description": "Application Gateway Name"
+            }
+        },
+        "appGwBePoolName": {
+            "type": "string",
+            "metadata": {
+                "description": "Application Gateway Backend Pool Name"
+            }
+        },
+        "appInsightsName": {
+            "type": "string",
+            "metadata": {
+                "description": "App Insights where custom metrics is hosted"
+            }
+        },
+        "autoScaleMetric": {
+             "type": "string",
+             "allowedValues": [
+                  "Data Plane CPU Utilization %", 
+                  "GP Gateway Utilization %",
+                  "GP Gateway Active Tunnels",
+                  "Data Plane Packet Buffer Utilization %",
+                  "Active Sessions",
+                  "SSL Proxy Session Utilization %",
+                  "Session Utilization %"                  
+                ], 
+             "defaultValue": "Active Sessions", 
+             "metadata": {
+                 "description": "Select the metric on which auto scale events should be triggered."
+             } 
+        }
+    },
+    "variables": {
+        "rgname": "[resourceGroup().id]",
+        "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+        "autoscaleName": "[concat('autoscale', variables('namingInfix'))]",
+        "nicNameMgmt": "[concat('nicmgmt', variables('namingInfix'))]",
+        "nicNameUntrust": "[concat('nicuntrust', variables('namingInfix'))]",
+        "nicNameTrust": "[concat('nictrust', variables('namingInfix'))]",
+        "ipConfigNameuntrust": "[concat('ipconfiguntrust', variables('namingInfix'))]",
+        "ipConfigNametrust": "[concat('ipconfigtrust', variables('namingInfix'))]",
+        "ipConfigNamemgmt": "[concat('ipconfigmgmt', variables('namingInfix'))]",
+        "imagePublisher": "paloaltonetworks",
+        "imageOffer" : "vmseries1",
+        "version" : "latest",
+        "nicName": "[parameters('vmName')]",
+        "location": "[resourceGroup().location]",
+        "resourceGroupName": "[resourceGroup().name]", 
+        "scaleMetricMap": {
+            "Data Plane CPU Utilization %": {
+                "metricName": "customMetrics/DataPlaneCPUUtilizationPct", 
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            }, 
+            "GP Gateway Utilization %": {
+                "metricName": "customMetrics/panGPGatewayUtilizationPct",
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            }, 
+            "GP Gateway Active Tunnels": {
+                "metricName": "customMetrics/panGPGWUtilizationActiveTunnels", 
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            },
+            "Active Sessions": {
+                "metricName": "customMetrics/panSessionActive",
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            },
+            "Data Plane Packet Buffer Utilization %": {
+                "metricName": "customMetrics/DataPlanePacketBufferUtilization",
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
 
-  },
-  "resources": [
-    {
-      "apiVersion": "2015-05-01-preview",
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('availabilitySetName')]",
-      "location": "[resourceGroup().location]"
-    },
-    {
-      "name": "[concat('SettingUpPublicIPs', copyindex())]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "copy": {
-          "name": "SettingUpPublicIPsLoop",
-          "count": "[parameters('vmCount')]"
-      },
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('SettingUpPublicIPUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "location": {
-            "value": "[variables('location')]"
-          },
-          "MgmtPublicIPAddressName": {
-            "value": "[concat(parameters('MgmtPublicIPAddressName'),copyindex())]"
-          },
-          "publicIPAddressType": {
-            "value": "[variables('publicIPAddressType')]"
-          },
-          "baseUrl": {
-            "value": "[parameters('baseUrl')]"
-          }
+            },
+            "SSL Proxy Session Utilization %": {
+                "metricName": "customMetrics/panSessionSslProxyUtilization", 
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            },
+            "Session Utilization %": {
+                "metricName": "customMetrics/panSessionUtilization", 
+                "metricResourceUri": "[resourceId(variables('resourceGroupName'), 'Microsoft.Insights/components', parameters('appInsightsName'))]"
+            }        
         }
-      }
     },
-    {
-      "name": "[concat('SetupNetworkInterfaces', copyindex())]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "SettingUpPublicIPsLoop"
-      ],
-      "copy": {
-          "name": "NetworkInterfaceLoop",
-          "count": "[parameters('vmCount')]"
-      },
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('setupNICsURL')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "location": {
-            "value": "[variables('location')]"
-          },
-          "nicName": {
-            "value": "[concat(variables('nicName'), copyindex())]"
-          },
-          "subnet0Name": {
-            "value": "[parameters('subnet0Name')]"
-          },
-          "subnet1Name": {
-            "value": "[parameters('subnet1Name')]"
-          },
-          "subnet2Name": {
-            "value": "[parameters('subnet2Name')]"
-          },
-          "virtualNetworkName": {
-            "value": "[parameters('virtualNetworkName')]"
-          },
-          "virtualNetworkExistingRGName": {
-            "value": "[parameters('virtualNetworkExistingRGName')]"
-          },
-          "MgmtPublicIPAddressName": {
-            "value": "[concat(parameters('MgmtPublicIPAddressName'), copyindex())]"
-          },
-          "baseUrl": {
-            "value": "[parameters('baseUrl')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "[concat('VMSeries-Firewall-VM', copyindex())]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "SettingUpPublicIPsLoop",
-        "NetworkInterfaceLoop",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
-      ],
-      "copy": {
-          "name": "VirtualMachineLoop",
-          "count": "[parameters('vmCount')]"
-      },
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('vmTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "location": {
-            "value": "[variables('location')]"
-          },
-          "vmName": {
-            "value": "[concat(parameters('vmName'), copyindex())]"
-          },
-          "availabilitySetName": {
-            "value": "[variables('availabilitySetName')]"
-          },
-          "imageSku": {
-            "value": "[parameters('imageSku')]"
-          },
-          "imageOffer": {
-            "value": "[variables('imageOffer')]"
-          },
-          "imagePublisher": {
-            "value": "[variables('imagePublisher')]"
-          },
-          "nicName": {
-            "value": "[concat(variables('nicName'), copyindex())]"
-          },
-          "vmSize": {
-            "value": "[parameters('vmSize')]"
-          },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "storageAccountName": {
-            "value": "[parameters('storageAccountName')]"
-          },
-          "sshKey": {
-            "value": "[parameters('sshKey')]"
-          },
-          "BootstrapUri": {
-            "value": "[parameters('BootstrapUri')]"
-          },
-          "BootstrapUriSizeGB": {
-            "value": "[parameters('BootstrapUriSizeGB')]"
-          }
-        }
-      }
-    }
-  ],
-  "outputs": {
-    "UntrustPrivateIPAddress1": {
-      "value": "[reference('SetupNetworkInterfaces0').outputs.UntrustPrivateIPAddress.value]",
-      "type": "string"
-    },
-    "UntrustPrivateIPAddress2": {
-      "value": "[reference('SetupNetworkInterfaces1').outputs.UntrustPrivateIPAddress.value]",
-      "type": "string"
-    },
-    "UntrustPrivateIPAddresses": {
-      "value": [
+    "resources": [
         {
-          "IpAddress": "[reference('SetupNetworkInterfaces0').outputs.UntrustPrivateIPAddress.value]"
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "[parameters('vmssName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "tags": {
+                "PanoramaManaged": "Yes"
+            },
+            "sku": {
+                "name": "[parameters('vmSize')]",
+                "tier": "Standard",
+                "capacity": "[parameters('vmScaleSetMinCount')]"
+            },
+            "plan": {
+                 "name": "[parameters('vmSku')]",
+                 "product": "[variables('imageOffer')]",
+                 "publisher": "[variables('imagePublisher')]"
+            },
+            "properties": {
+                "overprovision": "false",
+                "singlePlacementGroup": "false",
+                "upgradePolicy": {
+                    "mode": "Automatic"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "osDisk": {
+                            "managedDisk": {
+                                "storageAccountType": "Standard_LRS"
+                            },
+                            "caching": "ReadWrite",
+                            "createOption": "FromImage",
+                            "diskSizeGB": 60
+                        },
+                        "dataDisks": [],
+                        "imageReference": {
+                            "publisher": "[variables('imagePublisher')]",
+                            "offer": "[variables('imageOffer')]",
+                            "sku": "[parameters('vmSku')]",
+                            "version": "[parameters('imageVersion')]"
+                        }
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "[variables('namingInfix')]",
+                        "adminUsername": "[parameters('adminUsername')]",
+                        "adminPassword": "[parameters('adminPassword')]",
+                        "customData": "[base64(parameters('customDataField'))]"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                        {
+                            "name": "[parameters('nicNameMgmt')]",
+                            "properties": {
+                                "primary": "true",
+                                "ipConfigurations": [
+                                {
+                                    "name": "[variables('ipConfigNamemgmt')]",
+                                    "properties": {
+                                        "subnet": {
+                                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('subnetNameMgmt'))]"
+                                        }
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "name": "[variables('nicNameUntrust')]",
+                            "properties": {
+                                "primary": "false",
+                                "ipConfigurations": [
+                                {
+                                    "name": "[variables('ipConfigNameuntrust')]",
+                                    "properties": {
+                                        "subnet": {
+                                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('subnetNameUntrust'))]"
+                                        },
+                                        "ApplicationGatewayBackendAddressPools": [
+                                        {
+                                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/applicationGateways/', parameters('appGwName'), '/backendAddressPools/', parameters('appGwBePoolName'))]"
+                                        }]
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "name": "[variables('nicNameTrust')]",
+                            "properties": {
+                                "primary": "false",
+                                "ipConfigurations": [
+                                {
+                                    "name": "[variables('ipConfigNametrust')]",
+                                    "properties": {
+                                        "subnet": {
+                                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('subnetNameTrust'))]"
+                                        }
+                                    }
+                                }]
+                            }
+                        }]
+                    }
+                }
+            }
         },
         {
-          "IpAddress": "[reference('SetupNetworkInterfaces1').outputs.UntrustPrivateIPAddress.value]"
+            "type": "microsoft.insights/autoscalesettings",
+            "name": "[variables('autoscaleName')]",
+            "apiVersion": "2014-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "PanoramaManaged": "Yes"
+            },
+            "scale": null,
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('vmssName'))]"
+            ],
+            "properties": {
+                "profiles": [
+                    {
+                        "name": "Auto created scale condition",
+                        "capacity": {
+                            "default": "[parameters('vmScaleSetMinCount')]", 
+                            "maximum": "[parameters('vmScaleSetMaxCount')]", 
+                            "minimum": "[parameters('vmScaleSetMinCount')]"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "[variables('scaleMetricMap')[parameters('autoScaleMetric')].metricName]", 
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[variables('scaleMetricMap')[parameters('autoScaleMetric')].metricResourceUri]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT10M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 70
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "[variables('scaleMetricMap')[parameters('autoScaleMetric')].metricName]",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[variables('scaleMetricMap')[parameters('autoScaleMetric')].metricResourceUri]",
+                                    "operator": "LessThan",
+                                    "statistic": "Average",
+                                    "threshold": 20,
+                                    "timeAggregation": "Average",
+                                    "timeGrain": "PT1M",
+                                    "timeWindow": "PT10M"
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "notifications": [
+                {
+                    "operation": "Scale",
+                    "email": {
+                        "sendToSubscriptionAdministrator": false,
+                        "sendToSubscriptionCoAdministrators": false,
+                        "customEmails": []
+                    }
+                }
+                ],
+            "enabled": true,
+            "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('vmssName'))]"
         }
-      ],
-      "type": "array"
+    }],
+    "outputs": {
     }
-  }
 }
