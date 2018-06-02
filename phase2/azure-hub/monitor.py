@@ -19,6 +19,7 @@ import urllib2
 import ssl
 import json
 import xmltodict
+import xml.etree.ElementTree as ET
 
 from azure.cosmosdb.table import TableService
 from azure.cosmosdb.table.models import Entity
@@ -29,7 +30,7 @@ my_hub_name = 'rr-hub-scale'
 my_storage_name = 'rrhubscale1'
 
 rg_rule_programmed_tag='PANORAMA_PROGRAMMED'
-vmss_managed_tag = 'PanoramaManaged'
+hub_managed_tag = 'PanoramaManaged'
 CRED_FILE = '/var/lib/.worker_cred'
 
 ilb_name = 'myPrivateLB'
@@ -51,18 +52,23 @@ def get_default_ssl_context():
     return ctx
 
 
-def execute_panorama_command(url):
+def execute_panorama_command(url, ret_dict=True):
     ctx = get_default_ssl_context()
     try:
         req = urllib2.Request(url)
         response = urllib2.urlopen(req, context=ctx)
         xml_resp = response.read()
-        o = xmltodict.parse(xml_resp)
+        if not ret_dict:
+            return True, ET.fromstring(xml_resp)
+        o = xmltodict.parse(xml_resp, force_list=['entry'])
     except Exception as e:
+        logger.error('Execution of cmd failed with %s' % str(e))
         return (False, str(e))
 
     if o['response']['@status'].lower() == 'success':
-        if 'type=op' in url or 'type=commit' in url:
+        if ('type=op' in url or
+            'type=commit' in url or 
+            'action=get' in url):
             return (True, o['response']['result'])
         return (True, o['response']['msg'])
     else:
@@ -70,11 +76,11 @@ def execute_panorama_command(url):
 
 #<request cmd="op"><operations><show><devicegroups><name>rr-spoke-1-dg</name></devicegroups></show></operations></request>
 def read_panorama_object(ip, key, obj_type, obj_name=None):
-    url = 'https://' + ip + '/api/?type=op&cmd=<show><' + obj_type + '>'
+    url = 'https://' + ip + '/api/?type=op&action=get' + obj_type + '>'
     if obj_name:
         url += '<name>' + obj_name + '</name>'
     url += '</' + obj_type + '></show>&key='
-    url += key
+    url += ke
     
     ok, result = execute_panorama_command(url)
     if not ok:
@@ -91,6 +97,45 @@ def create_pan_entity(ip, key, name, pan_type):
     url += pan_type + "/entry[@name='" + name + "']"
     url += "&element=<description>" + name + "</description>"
     execute_panorama_command(url)
+
+#<request cmd="get" obj="/config/devices/entry[@name='localhost.localdomain']/device-group/entry[@name='rr-spoke-6-dg']/devices"></request>
+#<request cmd="op" cookie="7734765233019070" uid="502"><operations><show><devicegroups><name>rr-spoke-6-dg</name></devicegroups></show></operations></request>
+def get_devices_in_dg(ip, key, dg_name):
+    url = "https://" + ip + "/api/?type=config&action=get&key=" + key
+    url += "&xpath=/config/devices/entry[@name='localhost.localdomain']/"
+    url += "device-group/entry[@name='" + dg_name + "']/devices"
+
+    ok, result = execute_panorama_command(url, ret_dict=True)
+    if not ok:
+        return ok, result
+
+    device_list_in_dg = []
+    if result.get('devices', None):
+        device_list_in_dg = [x['@name'] for x in result['devices'].get('entry', [])]
+
+    # Bug in Panorama does not let to specify a specific device group
+    # to query a specific Device Group. Have to look at all Devices
+    # and filter.
+    url = "https://" + ip + "/api/?type=op&key=" + key
+    url += "&cmd=<show><devices><all>"
+    url += "</all></devices></show>"
+    ok, result = execute_panorama_command(url)
+
+    # Get devices which were known to be in the given DG.
+    device_list = []
+    if result.get('devices', None):
+        for device in device_list_in_dg:
+            for global_device in result['devices'].get('entry', []):
+                if device == global_device['@name']:
+                    device_list.append({
+                                        'name'       : global_device['@name'],
+                                        'hostname'   : global_device['hostname'],
+                                        'serial'     : global_device['serial'],
+                                        'ip-address' : global_device['ip-address'],
+                                        'connected'  : global_device['connected'],
+                                        'deactivated': global_device['deactivated']
+                                      })
+    return device_list
 
 #/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='rr-spoke-1']/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics/member[@name='enable']
 def set_azure_advanced_metrics_in_panorama(ip, key, templ_name, instr_key, enable=True):
@@ -125,11 +170,37 @@ def set_azure_advanced_metrics_in_panorama(ip, key, templ_name, instr_key, enabl
     return ok, res
 #https://panorama/api/?type=commit&action=all&cmd=<commit-all><shared-policy><device-group><entry%20name="device-group-name"/></device-group></shared-policy></commit-all>
 
+
+ILB_NAT_OBJ_NAME = 'ILB_NAT_ADDR'
+def set_ilb_nat_address(ip, key, dg_name, nat_ip):
+    url = "https://" + ip + "/api/?type=config&action=set&key=" + key
+    url += "&xpath=/config/devices/entry[@name='localhost.localdomain']/" 
+    url += "device-group/entry[@name='" + dg_name + "']"
+    url += "/address/entry[@name='" + ILB_NAT_OBJ_NAME +"']"
+    url += "&element=<ip-netmask>" + nat_ip + "/32</ip-netmask>"
+    ok, res = execute_panorama_command(url)
+    if not ok:
+        logger.info("Not able to set NAT Addre Obj %s in %s" % (nat_ip, dg_name))
+        return ok, res
+    logger.info("Successfully updated NAT Addr Obj %s in %s" % (nat_ip, dg_name))
+
+    url = "https://" + ip + "/api/?type=commit&key=" + key
+    url += "&cmd=<commit-all><device-group><name>"
+    url += dg_name+ "</name></device-group></commit-all>"
+    ok, res = execute_panorama_command(url)
+    if not ok:
+        logger.info("Committing changes to DG %s failed" % dg_name)
+    else:
+        logger.info("Committing changes to DG %s successful" % dg_name)
+    return ok, res
+
+
 def get_db_conn_string(storage_name, rg_name):
     credentials, subscription_id = get_azure_cred()
     store_client = StorageManagementClient(credentials, subscription_id)
     store_keys = store_client.storage_accounts.list_keys(rg_name, storage_name)
     return store_keys.keys[0].value
+
 
 def get_azure_cred():
     config = configparser.ConfigParser()
@@ -159,7 +230,7 @@ def filter_vmss(hub, spoke, vmss_name):
     return True if vmss_name == vmss_name_to_check else False
     '''
     vmss = compute_client.virtual_machine_scale_sets.get(spoke, vmss_name)
-    if vmss.tags and vmss.tags.get(vmss_managed_tag, None) == hub:
+    if vmss.tags and vmss.tags.get(hub_managed_tag, None) == hub:
         return True
     return False
 
@@ -169,30 +240,30 @@ def get_vmss_table_name(hub):
     table_name = re.sub(ALPHANUM, '', hub + 'vmsstable')
     return table_name
 
-def get_vm_serial_number(vm_name):
-    # TODO: To be implemented
-    return vm_name
-
-def create_db_entity(handle, tb_name, vmss, vm_name, rg_name, subs_id=''):
-    serial_no = get_vm_serial_number(vm_name)
-    if not serial_no:
-        logger.info("VM %s not licensed yet, will attempt to add in next attempt" % vm_name)
-        return False
-
+#'name'       : global_device['@name'],
+#'hostname'   : global_device['hostname'],
+#'serial'     : global_device['serial'],
+#'ip-address' : global_device['ip-address'],
+#'connected'  : global_device['connected'],
+#'deactivated': global_device['deactivated']
+def create_db_entity(handle, tb_name, spoke, vm_details, vmss_name, subs_id=''):
     vm = Entity()
-    # PartitionKey is nothing but the VMSS name
-    vm.PartitionKey = vmss
+    # PartitionKey is nothing but the spoke name
+    vm.PartitionKey = spoke
     # RowKey is nothing but the VM name itself.
-    vm.RowKey = vm_name
-    vm.resource_group_name = rg_name
+    vm.RowKey = vm_details['hostname']
+    vm.name = vm_details['name']
+    vm.serial_no = vm_details['serial']
+    vm.ip_addr = vm_details['ip-address']
+    vm.connected = vm_details['connected']
+    vm.deactivated = vm_details['deactivated']
     vm.subs_id = subs_id
-    vm.serial_no = serial_no
     vm.delicensed_on = 'not applicable'
     vm.is_delicensed = 'No'
     try:
         handle.insert_entity(tb_name, vm)
     except Exception as e:
-        logger.info("Insert entry to db for %s failed with error %s" % (vm_name, e))
+        logger.info("Insert entry to db for %s failed with error %s" % (vm_details['hostname'], e))
         return False
     return True
 
@@ -200,6 +271,7 @@ def create_db_entity(handle, tb_name, vmss, vm_name, rg_name, subs_id=''):
 def mark_new_spokes():
     # Look for Resource Groups (RGs) which do not have tags or does not have a
     # a tag named "PANORAMA_PROGRAMMED".
+
     potential_new_spokes = [x.name for x in resource_client.resource_groups.list()\
                      if not x.tags or not x.tags.get(rg_rule_programmed_tag, None)]
 
@@ -212,7 +284,10 @@ def mark_new_spokes():
                       if x.type == VMSS_TYPE and filter_vmss(my_hub_name, rg, x.name)]
         if fw_vm_list:
             rg_params = {'location': resource_client.resource_groups.get(rg).location}
-            rg_params.update(tags={rg_rule_programmed_tag:'No'})
+            rg_params.update(tags={
+                                     rg_rule_programmed_tag : 'No',
+                                     hub_managed_tag        : my_hub_name
+                                  })
             resource_client.resource_groups.create_or_update(rg, rg_params)
             logger.info("RG %s marked as a spoke managed by this hub %s" % (rg, my_hub_name))
 
@@ -221,8 +296,7 @@ def get_spokes_to_program():
     return [x.name for x in resource_client.resource_groups.list()\
            if x.tags and x.tags.get(rg_rule_programmed_tag, 'Yes') == 'No']
 
-
-def program_panorama():
+def program_panorama_for_new_spoke():
     spokes_list = get_spokes_to_program()
 
     for spoke in spokes_list:
@@ -250,7 +324,7 @@ def program_panorama():
                     break 
                 count += 1
             
-            # If we have all the information to progam, why loop?
+            # If we have all the information to progam, why loop? Optimization
             if count == 2:
                 break
 
@@ -258,20 +332,55 @@ def program_panorama():
             # We have the required info to program Panorama! Yay!
             logger.info('%s - NAT IP address for the ILB: ' % ilb_private_ip)
             logger.info('%s - InstrKey for the CW metrics: ' % instr_key)
-            ok, res = set_azure_advanced_metrics_in_panorama(panorama_ip, panorama_key, spoke, instr_key)
+
+            #ToDo: Call to program NAT config
+            dg_name = spoke + '-dg'
+            tmpl_name = spoke
+            ok, res = set_ilb_nat_address(panorama_ip, panorama_key, dg_name, ilb_private_ip)
             if not ok:
-                logger.error("Not able to enable CW metrics in Panorama template %s" % spoke)
+                continue
+
+            ok, res = set_azure_advanced_metrics_in_panorama(panorama_ip, panorama_key, tmpl_name, instr_key)
+            if not ok:
+                logger.error("Not able to enable CW metrics in Panorama template %s" % tmpl_name)
                 logger.error("Return error %s" % res)
                 continue
+
             spoke_params = {'location': resource_client.resource_groups.get(spoke).location}
-            spoke_params.update(tags={rg_rule_programmed_tag:'Yes'})
+            spoke_tags = resource_client.resource_groups.get(spoke).tags
+            spoke_tags[rg_rule_programmed_tag] = 'Yes'
+            spoke_params.update(tags=spoke_tags)
             resource_client.resource_groups.create_or_update(spoke, spoke_params)
             logger.info("RG %s marked as programmed and spoke managed by this hub %s" % (spoke, my_hub_name))
         else:
             logger.info("Not enough information to program panorama, will retry")
             continue
 
-                
+
+def get_managed_spokes(hub):
+    managed_spokes = [x.name for x in resource_client.resource_groups.list()\
+                     if x.tags and x.tags.get(hub_managed_tag, None) == hub]
+    return managed_spokes
+
+def create_azure_cosmos_table(hub, storage_name):
+    table_service = TableService(account_name=storage_name,
+                                 account_key=get_db_conn_string(storage_name, hub))
+    vmss_table = get_vmss_table_name(hub)
+
+    # Create the Cosmos DB if it does not exist already
+    if not table_service.exists(vmss_table):
+        try:
+            ok = table_service.create_table(vmss_table)
+            if not ok:
+                logger.info('Creating VMSS table failed')
+                return 1
+            logger.info('VMSS Table %s created succesfully' % vmss_table)
+        except Exception as e:
+            logger.info('Creating VMSS table failed ' + str(e))
+            return 1
+    return table_service
+
+
 def delicense_vm(vm):
     logger.info("Delicensing VM %s" % vm)
 
@@ -290,65 +399,79 @@ def main():
     panorama_ip, panorama_key = get_panorama()
 
     mark_new_spokes()
-    program_panorama()
+    program_panorama_for_new_spoke()
 
-    return
-
-
-    table_service = TableService(account_name=my_storage_name,
-                                 account_key=get_db_conn_string(my_storage_name, my_hub_name))
-    vmss_table = get_vmss_table_name(my_hub_name)
-
-    # Create the Cosmos DB if it does not exist already
-    if not table_service.exists(vmss_table):
-        try:
-            ok = table_service.create_table(vmss_table)
-            if not ok:
-                logger.info('Creating VMSS table failed')
-                return 1
-            logger.info('VMSS Table %s created succesfully' % vmss_table)
-        except Exception as e:
-            logger.info('Creating VMSS table failed ' + str(e))
-            return 1
+    managed_spokes = get_managed_spokes(my_hub_name)
 
     # Build db of all the entries in the backend table.
     # TODO: VM names are good enough
     # query_entities(table_name, filter=None, select=None, num_results=None, marker=None,
     # accept='application/json;odata=minimalmetadata', property_resolver=None, timeout=None)
-    vmss_db_list = table_service.query_entities(vmss_table)
-    db_vms_list = [x.get('RowKey') for x in vmss_db_list]
+    table_service = create_azure_cosmos_table(my_hub_name, my_storage_name)
+    #vmss_db_list = table_service.query_entities(vmss_table)
+    #db_vms_list = [x.get('RowKey') for x in vmss_db_list]
 
-    rg_list = [x.name for x in resource_client.resource_groups.list()]
 
     # In all the resource groups in the subscription, look for VMSS which
     # particpates in the monitor's licensing function.
+    vmss_table = get_vmss_table_name(my_hub_name)
     vmss_vms_list = []
-    for rg in rg_list:
-        rg_vmss_list = [x.name for x in resource_client.resources.list_by_resource_group(rg)
-                               if x.type == VMSS_TYPE and filter_vmss(my_hub_name, rg, x.name)]
-        for vmss in rg_vmss_list:
-            vm_list = compute_client.virtual_machine_scale_set_vms.list(rg, vmss)
-            for vm in vm_list:
-                vmss_vms_list.append(vm.name)
-                try:
-                    table_service.get_entity(vmss_table, vmss, vm.name)
-                except AzureMissingResourceHttpError:
-                    # New VM detected. Create an entity in the DB.
-                    ok = create_db_entity(table_service,
-                                          vmss_table,
-                                          vmss, vm.name,
-                                          rg, subscription_id)
-                    if not ok:
-                        logger.info("Creating DB Entry for VM failed")
-                except Exception as e:
-                    logger.error("Querying for %s failed" % vm_name)
+    for spoke in managed_spokes:
+        fw_vm_list = [x.name for x in resource_client.resources.list_by_resource_group(spoke)
+                      if x.type == VMSS_TYPE and filter_vmss(my_hub_name, spoke, x.name)]
+        dg_name = spoke + '-dg'
+        if fw_vm_list:
+            vmss = fw_vm_list[0]
+        else:
+            logger.error("No VMSS found in Resource Group %s" % spoke)
+            continue
 
-    vms_to_delic = [x for x in db_vms_list if x not in vmss_vms_list]
+        vmss_vm_list = compute_client.virtual_machine_scale_set_vms.list(spoke, vmss)
+        pan_vms_list = get_devices_in_dg(panorama_ip, panorama_key, dg_name)
 
-    for vm in vms_to_delic:
-        delicense_vm(vm)
+        vmss_hostname_list = []
+        for vm in vmss_vm_list:
+            vm_hostname = vm.os_profile.as_dict()['computer_name']
+            vmss_hostname_list.append(unicode(vm_hostname))
+            try:
+                index = next(i for i, x in enumerate(pan_vms_list) if x['hostname'] == vm_hostname)
+            except StopIteration:
+                logger.info("VM %s found in VMSS but not in Panorama. May be not yet booted. Wait" % vm_hostname)
+                continue
+
+            try:
+                db_vm_info = table_service.get_entity(vmss_table, spoke, vm_hostname)
+            except AzureMissingResourceHttpError:
+                # New VM detected. Create an entity in the DB.
+                # create_db_entity(handle, tb_name, spoke, vm_details, vmss_name, subs_id=''):
+                ok = create_db_entity(table_service,
+                                      vmss_table,
+                                      spoke,
+                                      pan_vms_list[index],
+                                      vmss, 
+                                      subscription_id)
+                if not ok:
+                    logger.info("Creating DB Entry for VM %s failed" % vm_hostname)
+            except Exception as e:
+                logger.error("Querying for %s failed" % vm_hostname)
+            else:
+                # IF possible update status TODO
+                logger.debug("VM %s is available in VMSS, Pan and DB" % (vm_hostname))
+
+        filter_str = "PartitionKey eq '%s'" % spoke
+        db_vms_list = table_service.query_entities(vmss_table, filter=filter_str)
+        db_hostname_list = [x.RowKey for x in db_vms_list if x.PartitionKey == spoke]
+
+        db_hostname_list.append('abc')
+        vms_to_delic = [x for x in db_hostname_list if x not in vmss_hostname_list]
+
+        if vms_to_delic:
+            logger.info('The following VMs need to be delicensed %s' % vms_to_delic)
+
+
+
+
     return 0
-
 
 if __name__ == "__main__":
     main()
