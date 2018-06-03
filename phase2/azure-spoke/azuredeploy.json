@@ -236,25 +236,25 @@
                 "description": "SSH RSA public key file as a string. Must be specified if Authentication Type is 'sshPublicKey'."
             }
         },
-        "customstorageaccount": {
+        "bootstrapStorageAccount": {
             "type": "string",
             "metadata":{
               "description": "Storage account containing bootstrap data"
             }
         },
-        "customaccesskey": {
+        "bootstrapStorageAccountAccessKey": {
             "type": "securestring",
             "metadata":{
               "description": "Storage account access key to read blob data privately"
             }
         },
-        "customfileshare": {
+        "bootstrapFileShare": {
             "type": "string",
             "metadata":{
                 "description": "File Share containing bootstrap files"
             }
         },
-        "customsharedirectory": {
+        "bootstrapSharedDir": {
             "type": "string",
             "defaultValue": "",
             "metadata":{
@@ -324,7 +324,7 @@
         "appGatewayName": "[concat(variables('rgname'), 'appgw', variables('namingInfix'))]",
         "appGwBackendPoolName": "[concat(variables('rgname'), 'appGwBepool', variables('namingInfix'))]",
         "vmssName": "[concat('pavmfw', variables('namingInfix'))]",
-        "customDataField": "[concat('storage-account=', parameters('customstorageaccount'), ',access-key=', parameters('customaccesskey'), ',file-share=', parameters('customfileshare'),',share-directory=', parameters('customsharedirectory'))]",
+        "customDataField": "[concat('storage-account=', parameters('bootstrapStorageAccount'), ',access-key=', parameters('bootstrapStorageAccountAccessKey'), ',file-share=', parameters('bootstrapFileShare'),',share-directory=', parameters('bootstrapSharedDir'))]",
         "space": " "
     },
     "resources": [

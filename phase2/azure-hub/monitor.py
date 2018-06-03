@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os
 import traceback
 
@@ -26,12 +27,11 @@ from azure.cosmosdb.table.models import Entity
 
 VMSS_TYPE = 'Microsoft.Compute/virtualMachineScaleSets'
 LOG_FILENAME = 'worker.log'
-my_hub_name = 'rr-hub-scale'
 my_storage_name = 'rrhubscale1'
 
 rg_rule_programmed_tag='PANORAMA_PROGRAMMED'
 hub_managed_tag = 'PanoramaManaged'
-CRED_FILE = '/var/lib/.worker_cred'
+CRED_FILE = '/tmp/monitor/monitor.cfg'
 
 ilb_name = 'myPrivateLB'
 ilb_type = 'Microsoft.Network/loadBalancers'
@@ -54,6 +54,7 @@ def get_default_ssl_context():
 
 def execute_panorama_command(url, ret_dict=True):
     ctx = get_default_ssl_context()
+    logger.info("Executed URL %s" % url)
     try:
         req = urllib2.Request(url)
         response = urllib2.urlopen(req, context=ctx)
@@ -80,7 +81,7 @@ def read_panorama_object(ip, key, obj_type, obj_name=None):
     if obj_name:
         url += '<name>' + obj_name + '</name>'
     url += '</' + obj_type + '></show>&key='
-    url += ke
+    url += key
     
     ok, result = execute_panorama_command(url)
     if not ok:
@@ -120,6 +121,7 @@ def get_devices_in_dg(ip, key, dg_name):
     url += "&cmd=<show><devices><all>"
     url += "</all></devices></show>"
     ok, result = execute_panorama_command(url)
+    print result
 
     # Get devices which were known to be in the given DG.
     device_list = []
@@ -136,6 +138,45 @@ def get_devices_in_dg(ip, key, dg_name):
                                         'deactivated': global_device['deactivated']
                                       })
     return device_list
+
+#/api/?type=op&cmd=<request><batch><license><info></info></license></batch></request>
+def get_valid_device_license_info(ip, key, dg_name, devices):
+    url = "https://" + ip + "/api/?type=op&key=" + key
+    url += "&cmd=<request><batch><license><info>"
+    url += "</info></license></batch></request>"
+    ok, result = execute_panorama_command(url)
+    if not ok:
+        return False, result
+
+    # No valid licenses in Panorama
+    if not result['devices'].get('entry', None):
+        return True, []
+
+    hostnames = [x.get('hostname') for x in devices]
+
+    valid_lics = [x.get('devicename') for x in result['devices']['entry']\
+                  if x.get('devicename') in hostnames]
+
+    return True, valid_lics
+
+#<request><batch><license><deactivate><VM-Capacity><mode>auto</mode>
+#<devices>007057000043278</devices></VM-Capacity></deactivate></license></batch></request>
+
+# cmd="delete" obj="/config/devices/entry[@name='localhost.localdomain']/device-group/entry[@name='rr-spoke-6-dg']/devices/entry[@name='007057000043278']" cookie="5879269088773418"></request>
+def deactivate_license_in_panorama(ip, key, serial_no):
+    url = "https://" + ip + "/api/?type=op&key=" + key
+    url += "&cmd=<request><batch><license><deactivate><VM-Capacity><devices>"
+    url += "<mode>auto</mode>"
+    url += serial_no
+    url += "</devices></VM-Capacity></deactivate></license></batch></request>"
+    ok, result = execute_panorama_command(url)
+    if not ok:
+        logger.error('Deactivation of VM with serial %s failed' % serial_no)
+        return False, result
+
+    print result
+    return True, result
+
 
 #/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='rr-spoke-1']/config/devices/entry[@name='localhost.localdomain']/deviceconfig/setting/azure-advanced-metrics/member[@name='enable']
 def set_azure_advanced_metrics_in_panorama(ip, key, templ_name, instr_key, enable=True):
@@ -214,6 +255,13 @@ def get_azure_cred():
     )
     return credentials, subscription_id
 
+
+def get_hub_and_storage_name():
+    config = configparser.ConfigParser()
+    config.read(CRED_FILE)
+    return (str(config['DEFAULT']['HUB_NAME']), str(config['DEFAULT']['STORAGE_ACCT_NAME']))
+
+
 def get_panorama():
     config = configparser.ConfigParser()
     config.read(CRED_FILE)
@@ -262,10 +310,14 @@ def create_db_entity(handle, tb_name, spoke, vm_details, vmss_name, subs_id=''):
     vm.is_delicensed = 'No'
     try:
         handle.insert_entity(tb_name, vm)
+        logger.info("VM %s with serial no. %s in db" % (vm_details['hostname'], vm_details['serial']))
     except Exception as e:
         logger.info("Insert entry to db for %s failed with error %s" % (vm_details['hostname'], e))
         return False
     return True
+
+def clear_vmss_cosmos_table(table_service, hub):
+    table_service.delete_table(get_vmss_table_name(hub))
 
 
 def mark_new_spokes():
@@ -397,20 +449,18 @@ def main():
     compute_client = ComputeManagementClient(credentials, subscription_id)
     network_client = NetworkManagementClient(credentials, subscription_id)
     panorama_ip, panorama_key = get_panorama()
+    my_hub_name, my_storage_name = get_hub_and_storage_name()
 
     mark_new_spokes()
     program_panorama_for_new_spoke()
 
     managed_spokes = get_managed_spokes(my_hub_name)
 
-    # Build db of all the entries in the backend table.
-    # TODO: VM names are good enough
     # query_entities(table_name, filter=None, select=None, num_results=None, marker=None,
     # accept='application/json;odata=minimalmetadata', property_resolver=None, timeout=None)
     table_service = create_azure_cosmos_table(my_hub_name, my_storage_name)
-    #vmss_db_list = table_service.query_entities(vmss_table)
-    #db_vms_list = [x.get('RowKey') for x in vmss_db_list]
-
+    clear_vmss_cosmos_table(table_service, my_hub_name)
+    return
 
     # In all the resource groups in the subscription, look for VMSS which
     # particpates in the monitor's licensing function.
@@ -431,6 +481,7 @@ def main():
 
         vmss_hostname_list = []
         for vm in vmss_vm_list:
+            import pdb; pdb.set_trace()
             vm_hostname = vm.os_profile.as_dict()['computer_name']
             vmss_hostname_list.append(unicode(vm_hostname))
             try:
@@ -438,7 +489,7 @@ def main():
             except StopIteration:
                 logger.info("VM %s found in VMSS but not in Panorama. May be not yet booted. Wait" % vm_hostname)
                 continue
-
+            
             try:
                 db_vm_info = table_service.get_entity(vmss_table, spoke, vm_hostname)
             except AzureMissingResourceHttpError:
@@ -460,18 +511,35 @@ def main():
 
         filter_str = "PartitionKey eq '%s'" % spoke
         db_vms_list = table_service.query_entities(vmss_table, filter=filter_str)
-        db_hostname_list = [x.RowKey for x in db_vms_list if x.PartitionKey == spoke]
+        db_hostname_list = [{'hostname': x.RowKey, 'serial': x.serial_no}\
+                            for x in db_vms_list if x.PartitionKey == spoke]
 
-        db_hostname_list.append('abc')
-        vms_to_delic = [x for x in db_hostname_list if x not in vmss_hostname_list]
+        vms_to_delic = [x for x in db_hostname_list if x.get('hostname') not in vmss_hostname_list]
+        print db_hostname_list
+        print vmss_hostname_list
+        print vms_to_delic
+        import pdb; pdb.set_trace()
 
         if vms_to_delic:
             logger.info('The following VMs need to be delicensed %s' % vms_to_delic)
+            ok, valid_licenses = get_valid_device_license_info(panorama_ip, panorama_key,
+                                                           spoke, vms_to_delic)
+            if len(valid_licenses) != len(vms_to_delic):
+                logger.info('Some license entries not found in Panorama.')
+                logger.info('Will still attempt to delicense them')
 
-
-
-
+            for device in vms_to_delic:
+                ok, res = deactivate_license_in_panorama(panorama_ip,
+                                                         panorama_key,
+                                                         device.get('serial'))
+                if not ok:
+                    logger.error('Deactivation of VM %s failed. will retry' % device.get('hostname'))
+                    continue
+                # Delete the entry from the table service as well.
+                table_service.delete_entity(vmss_table, spoke, device.get('hostname')) 
+        else:
+            logger.debug('No VMs need to be delicensed. No-op')
     return 0
 
 if __name__ == "__main__":
-    main()
+   main()
