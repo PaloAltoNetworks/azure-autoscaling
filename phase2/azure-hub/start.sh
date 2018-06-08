@@ -25,6 +25,6 @@ echo "HUB_NAME=$8" >> $PARAM_FILE
 echo "STORAGE_ACCT_NAME=$9" >> $PARAM_FILE
 
 crontab -l > _tmp_file
-echo "0/5 * * * * /tmp/monitor/monitor.py" >> _tmp_file
+echo "*/5 * * * * /tmp/monitor/monitor.py" >> _tmp_file
 crontab _tmp_file
 #export these as environment variables?
