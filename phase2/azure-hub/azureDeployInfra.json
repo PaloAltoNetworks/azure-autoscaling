@@ -294,6 +294,9 @@
             "name": "deployNsg",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/deployStorage"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -320,6 +323,9 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('WorkerPublicIPAddressName')]",
             "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/deployStorage"
+            ],
             "apiVersion": "[variables('networkApiVersion')]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic"
@@ -330,7 +336,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/deployNsg"
+                "Microsoft.Resources/deployments/deployNsg",
+                "Microsoft.Resources/deployments/deployStorage"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -427,7 +434,7 @@
                     "osDisk": {
                         "name": "worker-osdisk",
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageName')), variables('networkApiVersion')).primaryEndpoints.blob,'vhds/osdisk.vhd')]"
+                            "uri": "[concat('https://', variables('storageName'), '.blob.core.windows.net/vhds/tempworker.vhd')]"
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
