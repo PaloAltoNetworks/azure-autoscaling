@@ -9,8 +9,9 @@ pip install setuptools &&
 pip install azure &&
 
 mkdir /tmp/monitor
+chmod 666 /tmp/monitor
 wget https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/monitor.py > /tmp/monitor/monitor.py
-chmod +x /tmp/monitor/monitor.py
+chmod 555 /tmp/monitor/monitor.py
 
 PARAM_FILE=/tmp/monitor/monitor.cfg
 echo "[DEFAULT]" > $PARAM_FILE
@@ -27,4 +28,3 @@ echo "STORAGE_ACCT_NAME=$9" >> $PARAM_FILE
 crontab -l > _tmp_file
 echo "*/5 * * * * /tmp/monitor/monitor.py" >> _tmp_file
 crontab _tmp_file
-#export these as environment variables?
