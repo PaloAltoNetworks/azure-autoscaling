@@ -255,14 +255,15 @@
         "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
         "location"   : "[resourceGroup().location]",
         "rgname"     : "[resourceGroup().name]",
-        "storageName": "[toLower(concat(parameters('storageName')))]",
+        "storageName": "[toLower(parameters('storageName'))]",
         "networkSecurityGroupName": "[concat(variables('rgname'), '-nsg' )]",
 
         "nicNameWorker": "[concat ('workernic', variables('namingInfix'))]",
         "WorkerPublicIPAddressName": "[concat('workerPip', variables('namingInfix'))]",
         "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
         "avSetName": "[concat(variables('rgName'), '-outbound-avset']",
-        "firewallVmName": "concat(variables('rgName'), '-outbound-vm-series-firewall')"
+        "firewallVmName": "concat(variables('rgName'), '-outbound-vm-series-firewall')",
+        "space": " "
     },
 
     "resources": [
@@ -459,7 +460,7 @@
                     "fileUris": [
                         "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/start.sh"
                     ],
-                    "commandToExecute": "[concat('/bin/bash', './start.sh &')]"
+                    "commandToExecute": "[concat('/bin/bash', './start.sh ', parameters('subscriptionId'), variables('space'), parameters('appID'), variables('space'), parameters('appSecret'), variables('space'), parameters('TenantId'), variables('space'), parameters('panoramaIP'), variables('space'), parameters('panoramaApiKey'), variables('space'), parameters('licenseDeactivationKey'), variables('space'), variables('rgname'), variables('space'), variables('storageName'), variables('space'), '&')]"
                 }
             }
         },
