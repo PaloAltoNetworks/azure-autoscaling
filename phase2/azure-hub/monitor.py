@@ -27,7 +27,6 @@ from azure.cosmosdb.table.models import Entity
 
 VMSS_TYPE = 'Microsoft.Compute/virtualMachineScaleSets'
 LOG_FILENAME = 'worker.log'
-my_storage_name = 'rrhubscale1'
 
 rg_rule_programmed_tag='PANORAMA_PROGRAMMED'
 hub_managed_tag = 'PanoramaManaged'
@@ -320,7 +319,7 @@ def clear_vmss_cosmos_table(table_service, hub):
     table_service.delete_table(get_vmss_table_name(hub))
 
 
-def mark_new_spokes():
+def mark_new_spokes(hub):
     # Look for Resource Groups (RGs) which do not have tags or does not have a
     # a tag named "PANORAMA_PROGRAMMED".
 
@@ -333,22 +332,22 @@ def mark_new_spokes():
     # key.
     for rg in potential_new_spokes:
         fw_vm_list = [x for x in resource_client.resources.list_by_resource_group(rg)
-                      if x.type == VMSS_TYPE and filter_vmss(my_hub_name, rg, x.name)]
+                      if x.type == VMSS_TYPE and filter_vmss(hub, rg, x.name)]
         if fw_vm_list:
             rg_params = {'location': resource_client.resource_groups.get(rg).location}
             rg_params.update(tags={
                                      rg_rule_programmed_tag : 'No',
-                                     hub_managed_tag        : my_hub_name
+                                     hub_managed_tag        : hub
                                   })
             resource_client.resource_groups.create_or_update(rg, rg_params)
-            logger.info("RG %s marked as a spoke managed by this hub %s" % (rg, my_hub_name))
+            logger.info("RG %s marked as a spoke managed by this hub %s" % (rg, hub))
 
 
 def get_spokes_to_program():
     return [x.name for x in resource_client.resource_groups.list()\
            if x.tags and x.tags.get(rg_rule_programmed_tag, 'Yes') == 'No']
 
-def program_panorama_for_new_spoke():
+def program_panorama_for_new_spoke(hub):
     spokes_list = get_spokes_to_program()
 
     for spoke in spokes_list:
@@ -403,7 +402,7 @@ def program_panorama_for_new_spoke():
             spoke_tags[rg_rule_programmed_tag] = 'Yes'
             spoke_params.update(tags=spoke_tags)
             resource_client.resource_groups.create_or_update(spoke, spoke_params)
-            logger.info("RG %s marked as programmed and spoke managed by this hub %s" % (spoke, my_hub_name))
+            logger.info("RG %s marked as programmed and spoke managed by this hub %s" % (spoke, hub))
         else:
             logger.info("Not enough information to program panorama, will retry")
             continue
@@ -451,8 +450,8 @@ def main():
     panorama_ip, panorama_key = get_panorama()
     my_hub_name, my_storage_name = get_hub_and_storage_name()
 
-    mark_new_spokes()
-    program_panorama_for_new_spoke()
+    mark_new_spokes(my_hub_name)
+    program_panorama_for_new_spoke(my_hub_name)
 
     managed_spokes = get_managed_spokes(my_hub_name)
 
@@ -518,7 +517,6 @@ def main():
         print db_hostname_list
         print vmss_hostname_list
         print vms_to_delic
-        import pdb; pdb.set_trace()
 
         if vms_to_delic:
             logger.info('The following VMs need to be delicensed %s' % vms_to_delic)

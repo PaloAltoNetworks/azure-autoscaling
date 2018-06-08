@@ -261,8 +261,8 @@
         "nicNameWorker": "[concat ('workernic', variables('namingInfix'))]",
         "WorkerPublicIPAddressName": "[concat('workerPip', variables('namingInfix'))]",
         "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
-        "avSetName": "[concat(variables('rgName'), '-outbound-avset']",
-        "firewallVmName": "concat(variables('rgName'), '-outbound-vm-series-firewall')",
+        "avSetName": "[concat(variables('rgName'), '-outbound-avset')]",
+        "firewallVmName": "[concat(variables('rgName'), '-outbound-vm-series-firewall')]",
         "space": " "
     },
 
@@ -405,6 +405,7 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/deployVNet",
+                "Microsoft.Resources/deployments/deployStorage",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWorker'))]"
             ],
             "properties": {
@@ -469,7 +470,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/deployVNet"
+                "Microsoft.Resources/deployments/deployVNet",
+                "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -509,7 +511,8 @@
             "dependsOn": [
                 "Microsoft.Resources/deployments/deployStorage",
                 "Microsoft.Resources/deployments/deployVNet",
-                "Microsoft.Resources/deployments/deployOutboundLoadBalancer"
+                "Microsoft.Resources/deployments/deployOutboundLoadBalancer",
+                "[concat('Microsoft.Compute/virtualMachines/', variables('worker-node-name'))]"
             ],
             "properties": {
                 "mode": "Incremental",
