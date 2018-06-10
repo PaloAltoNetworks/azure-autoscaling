@@ -613,6 +613,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "hubName": {
+                        "value": "[parameters('hubResourceGroupName')]"
+                    },
                     "vmssName": {
                         "value": "[variables('vmssName')]"
                     },
