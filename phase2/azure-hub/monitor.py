@@ -535,6 +535,9 @@ def main():
                 table_service.delete_entity(vmss_table, spoke, device.get('hostname')) 
         else:
             logger.debug('No VMs need to be delicensed. No-op')
+    all_db_vms_list = table_service.query_entities(vmss_table)
+    for vm in all_db_vms_list:
+        logger.info('DB VM %s' % vm.get('hostname'))
     return 0
 
 if __name__ == "__main__":
