@@ -10,7 +10,6 @@ pip install azure &&
 
 mkdir /tmp/monitor
 chmod 777 /tmp/monitor
-wget https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/monitor.py > /tmp/monitor/monitor.py
 wget https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/monitor.py > monitor.py
 cp monitor.py /tmp/monitor/
 chmod 777 /tmp/monitor/monitor.py
