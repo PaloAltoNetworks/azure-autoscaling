@@ -423,7 +423,8 @@
                 "typeHandlerVersion": "2.0",
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/start.sh"
+                        "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/start.sh",
+                        "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-hub/monitor.py"
                     ],
                     "commandToExecute": "[concat('/bin/bash ./start.sh', variables('space'), parameters('subscriptionId'), variables('space'), parameters('appID'), variables('space'), parameters('appSecret'), variables('space'), parameters('TenantId'), variables('space'), parameters('panoramaIP'), variables('space'), parameters('panoramaApiKey'), variables('space'), parameters('licenseDeactivationKey'), variables('space'), variables('rgname'), variables('space'), variables('storageName'), variables('space'), '&')]"
                 }
