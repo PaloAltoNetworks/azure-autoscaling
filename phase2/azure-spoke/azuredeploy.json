@@ -10,7 +10,7 @@
         },
         "hubVnetName": {
             "type": "string",
-            "defaultValue": "outbound-hub-vnet",
+            "defaultValue": "hub-vnet",
             "metadata": {
                 "description": "VN Name of the VNet where the hub resides"
             }
@@ -19,13 +19,6 @@
             "type": "string",
             "metadata": {
                 "description": "IP Address of the outbound Load Balancer in the hub"
-            }
-        },
-        "networkSecurityGroupName": {
-            "type": "string",
-            "defaultValue": "nsg-mgmt",
-            "metadata": {
-                "description": "Network Security Group Name"
             }
         },
         "networkSecurityGroupInboundSrcIP": {
@@ -49,13 +42,6 @@
                 "description": "CIDR for Virtual Network"
             }
         },
-        "MgmtSubnetName": {
-            "type": "string",
-            "defaultValue": "Mgmt",
-            "metadata": {
-                 "description": "Subnet for Management Network"
-            }
-        },
         "mgmtSubnetPrefix": {
             "type": "string",
             "defaultValue": "192.168.0.0/24",
@@ -63,25 +49,11 @@
                         "description": "CIDR for Management Network"
                     }
             },
-        "untrustedSubnetName": {
-            "type": "string",
-            "defaultValue": "Untrust",
-            "metadata": {
-                "description": "Subnet for Untrusted Network"
-            }
-        },
         "untrustedSubnetPrefix": {
             "type": "string",
             "defaultValue": "192.168.1.0/24",
             "metadata": {
                 "description": "CIDR for Untrusted Network"
-            }
-        },
-        "trustedSubnetName": {
-            "type": "string",
-            "defaultValue": "Trust",
-            "metadata": {
-                "description": "Subnet for Trusted Network"
             }
         },
         "trustedSubnetPrefix": {
@@ -97,32 +69,11 @@
                 "description": "App Gateway Public IP DNS Name. Must be globally unique."
             }
         },
-        "appGatewaySubnetName": {
-            "type": "string",
-            "defaultValue": "AppGWSubnet",
-            "metadata": {
-                "description": "Subnet for App Gateway"
-            }
-        },
         "appGatewaySubnetPrefix": {
             "type": "string",
             "defaultValue": "192.168.3.0/24",
             "metadata": {
                 "description": "CIDR for App Gateway"
-            }
-        },
-        "internalLoadBalancerName": {
-            "type": "string",
-            "defaultValue": "myPrivateLB",
-            "metadata": {
-                "description": "Internal Load Balancer name - used to identify resource in Azure portal"
-            }
-        },
-        "backendSubnetName": {
-            "type": "string",
-            "defaultValue": "backendSubnet",
-            "metadata": {
-                "description": "Subnet for Backend WWW Network"
             }
         },
         "backendSubnetPrefix": {
@@ -146,7 +97,7 @@
         },
         "firewallModel": {
              "type": "string",
-             "defaultValue": "bundle1",
+             "defaultValue": "byol",
              "allowedValues": [
                     "byol",
                     "bundle1",
@@ -155,13 +106,6 @@
              "metadata": {
                  "description": "byol = Bring Your Own License; bundle1 = Bundle 1 PAYG (Hourly); bundle2 = Bundle 2 PAYG (Hourly)"
              }
-        },
-        "firewallVmName": {
-             "type": "string",
-             "metadata": {
-                "description": "Name prefix of VM-Series VM in the Azure portal"
-             },    
-             "defaultValue": "VM-Series"
         },
         "firewallVmSize": {
              "type": "string",
@@ -178,12 +122,6 @@
                 "description": "Azure VM size for VM-Series"
              },
              "defaultValue": "Standard_D3_v2"
-        },
-        "MgmtPublicIPAddressName": {
-            "type": "string",
-            "metadata": {
-                "description": "DNS Name prefix of public IP resource for Management interface of VM-Series firewall. Name must be globally unique."
-            }
         },
         "storageAccountName": {
             "type": "string",
@@ -261,12 +199,6 @@
                     "description": "(OPTIONAL) Directory name under File Share containing bootstrap files"
             }   
         },
-        "appInsights": {
-            "type" : "string",
-            "metadata": {
-                    "description": "Enter the name for your  Application Insights environment"
-            }
-        },
         "vmScaleSetMinCount": {
             "type": "int",
             "defaultValue": 1,
@@ -302,6 +234,13 @@
         "location" : "[resourceGroup().location]",
         "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
         "rgname" : "[resourceGroup().name]",
+        "networkSecurityGroupName" : "[concat(variables('rgname'), '-mgmt-nsg-', variables('namingInfix'))]",
+        "MgmtSubnetName" : "[concat(parameters('virtualNetworkName'), '-mgmt-subnet')]",
+        "untrustedSubnetName" : "[concat(parameters('virtualNetworkName'), '-untrust-subnet')]",
+        "trustedSubnetName" : "[concat(parameters('virtualNetworkName'), '-trust-subnet')]",
+        "backendSubnetName" : "[concat(parameters('virtualNetworkName'), '-backend-subnet')]",
+        "appGatewaySubnetName" : "[concat(parameters('virtualNetworkName'), '-appgw-subnet')]",
+        "internalLoadBalancerName" : "myPrivateLB",
         "LoadBalancerType" : "layer-7",
         "firewallVmCount" : 2,
         "baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/phase2/azure-spoke",
@@ -317,7 +256,7 @@
         "appInsightsComponentsApiVersion": "2018-05-01",
         "networkApiVersion": "2017-06-01",
         "computeApiVersion": "2017-03-30",
-        "appInsightsName": "[concat(parameters('appInsights'),variables('namingInfix'))]",
+        "appInsightsName": "[concat(variables('rgname'), '-appinsights-', variables('namingInfix'))]",
         "appInsightsUrl": "[concat(variables('baseUrl'),'/deployAppInsights.json')]",
         "nicNameWorker": "[concat('tempworkernic', variables('namingInfix'))]",
         "workerName": "[concat('tempworker', variables('namingInfix'))]",
@@ -363,7 +302,7 @@
                         "value": "[variables('location')]"
                     },
                     "nsgName": {
-                        "value": "[parameters('networkSecurityGroupName')]"
+                        "value": "[variables('networkSecurityGroupName')]"
                     },
                     "srcIPInboundNSG": {
                         "value": "[parameters('networkSecurityGroupInboundSrcIP')]"
@@ -413,7 +352,7 @@
                 },
                 "parameters": {
                     "nsgName": {
-                        "value": "[parameters('networkSecurityGroupName')]"
+                        "value": "[variables('networkSecurityGroupName')]"
                     },
                     "virtualNetworkName": {
                         "value": "[parameters('virtualNetworkName')]"
@@ -422,19 +361,19 @@
                         "value": "[parameters('virtualNetworkAddressPrefix')]"
                     },
                     "subnet0Name": {
-                         "value": "[parameters('MgmtSubnetName')]"
+                         "value": "[variables('MgmtSubnetName')]"
                     },
                     "subnet1Name": {
-                         "value": "[parameters('untrustedSubnetName')]"
+                         "value": "[variables('untrustedSubnetName')]"
                     },
                     "subnet2Name": {
-                         "value": "[parameters('trustedSubnetName')]"
+                         "value": "[variables('trustedSubnetName')]"
                     },
                     "subnetLBName": {
-                         "value": "[parameters('appGatewaySubnetName')]"
+                         "value": "[variables('appGatewaySubnetName')]"
                     },
                     "subnetWWWName": {
-                         "value": "[parameters('backendSubnetName')]"
+                         "value": "[variables('backendSubnetName')]"
                     },
                     "subnet0Prefix": {
                          "value": "[parameters('mgmtSubnetPrefix')]"
@@ -491,7 +430,7 @@
                     "properties": {
                         "privateIPAllocationMethod": "Dynamic",
                         "subnet": {
-                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('MgmtSubnetName'))]"
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', variables('MgmtSubnetName'))]"
                         }
                     }
                 }]
@@ -589,7 +528,7 @@
                          "value": "[parameters('virtualNetworkName')]"
                     },
                     "subnetName": {
-                         "value": "[parameters('appGatewaySubnetName')]"
+                         "value": "[variables('appGatewaySubnetName')]"
                     },
                     "appGwBackendPoolName": {
                         "value": "[variables('appGwBackendPoolName')]"
@@ -644,13 +583,13 @@
                          "value": "[parameters('virtualNetworkName')]"
                     },
                     "subnetNameMgmt": {
-                        "value": "[parameters('MgmtSubnetName')]"
+                        "value": "[variables('MgmtSubnetName')]"
                     },
                     "subnetNameUntrust": {
-                        "value": "[parameters('untrustedSubnetName')]"
+                        "value": "[variables('untrustedSubnetName')]"
                     },
                     "subnetNameTrust": {
-                        "value": "[parameters('trustedSubnetName')]"
+                        "value": "[variables('trustedSubnetName')]"
                     },
                     "appGwName": {
                         "value": "[variables('appGatewayName')]"
@@ -692,7 +631,7 @@
                          "value": "[variables('rgname')]"
                     },
                     "lbName": {
-                         "value": "[parameters('internalLoadBalancerName')]"
+                         "value": "[variables('internalLoadBalancerName')]"
                     },
                     "adminUsername": {
                          "value": "[parameters('username')]"
@@ -704,10 +643,10 @@
                          "value": "[parameters('sshPublicKey')]"
                     },
                     "subnetName": {
-                         "value": "[parameters('backendSubnetName')]"
+                         "value": "[variables('backendSubnetName')]"
                     },
                     "frontendSubnetName": {
-                         "value": "[parameters('trustedSubnetName')]"
+                         "value": "[variables('trustedSubnetName')]"
                     },
                     "vmSize": {
                          "value": "[parameters('backendVmSize')]"

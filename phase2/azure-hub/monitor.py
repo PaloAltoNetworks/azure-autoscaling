@@ -38,7 +38,7 @@ ilb_type = 'Microsoft.Network/loadBalancers'
 appinsights_type = 'Microsoft.Insights/components'
 
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO,
-                    filemode='w',
+                    filemode='a',
                     format='[%(asctime)s] [%(levelname)s] (%(threadName)-10s) %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -458,8 +458,8 @@ def main():
     # query_entities(table_name, filter=None, select=None, num_results=None, marker=None,
     # accept='application/json;odata=minimalmetadata', property_resolver=None, timeout=None)
     table_service = create_azure_cosmos_table(my_hub_name, my_storage_name)
-    clear_vmss_cosmos_table(table_service, my_hub_name)
-    return
+    #clear_vmss_cosmos_table(table_service, my_hub_name)
+    #return
 
     # In all the resource groups in the subscription, look for VMSS which
     # particpates in the monitor's licensing function.

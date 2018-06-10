@@ -2,49 +2,55 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "hubLoadBalancerSku": {
+        "virtualNetworkName": {
             "type": "string",
-            "allowedValues": [
-                "Standard",
-                "Basic"
-            ],
+            "defaultValue": "hub-vnet",
             "metadata": {
-                "description": "Std LB load balances across all the ports where as Basic LB load balances on a port-to-port basis"
-            },
-            "defaultValue": "Standard"
+                "description": "Hub's Virtual Network Name. You need this name to launch the spoke"
+            }
         },
+        "virtualNetworkAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "CIDR for Virtual Network"
+            }
+        },
+        "mgmtSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "CIDR for Management Network"
+            }
+        },
+        "untrustedSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "CIDR for Untrusted Network"
+            }
+        },
+        "trustedSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.2.0/24",
+            "metadata": {
+                "description": "CIDR for Trusted Network"
+            }
+        },
+        "loadBalancerIP": {
+            "type": "string",
+            "metadata": {
+                "description": "IP Address for the outbound load balancer resource in the Trust network."
+            },
+            "defaultValue": "10.0.2.4"
+        },
+ 
         "storageName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the storage account created to store the VM's disks.  Storage account name must be globally unique."
             },
             "defaultValue": "Enter a globally unique name"
-        },
-        "mgmtPublicIPDns": {
-            "type": "string",
-            "metadata": {
-                "description": "DNS Name prefix of public IP resource for Management interface of VM-Series firewall.  Name must be globally unique."
-            },
-            "defaultValue": "Enter a globally unique name"
-        },
-        "networkSecurityGroupInboundIP": {
-            "type": "string",
-            "metadata": {
-                "description": "Your source public IP address. Added to the inbound NSG on eth0 (MGMT), to restrict access to the deployment."
-            },
-            "defaultValue": "1.1.1.1/32"
-        },
-        "imageVersion": {
-            "type": "string",
-            "allowedValues": [
-                "latest",
-                "8.1.0",
-                "8.0.0"
-                ],
-            "defaultValue": "latest",
-            "metadata": {
-                "description": "PAN OS Version"
-            }
         },
         "storageType": {
             "type": "string",
@@ -59,84 +65,30 @@
             },
             "defaultValue": "Standard_LRS"
         },
-
-        "virtualNetworkName": {
-            "type": "string",
-            "defaultValue": "vnet",
-            "metadata": {
-                "description": "Virtual Network Name"
-            }
-        },
-        "virtualNetworkAddressPrefix": {
-            "type": "string",
-            "defaultValue": "10.0.0.0/16",
-            "metadata": {
-                "description": "CIDR for Virtual Network"
-            }
-        },
-        "mgmtSubnetName": {
-            "type": "string",
-            "defaultValue": "Mgmt",
-            "metadata": {
-                "description": "Subnet for Management Network"
-            }
-        },
-        "mgmtSubnetPrefix": {
-            "type": "string",
-            "defaultValue": "10.0.0.0/24",
-            "metadata": {
-                "description": "CIDR for Management Network"
-            }
-        },
-        "untrustedSubnetName": {
-            "type": "string",
-            "defaultValue": "Untrust",
-            "metadata": {
-                "description": "Subnet for Untrusted Network"
-            }
-        },
-        "untrustedSubnetPrefix": {
-            "type": "string",
-            "defaultValue": "10.0.1.0/24",
-            "metadata": {
-                "description": "CIDR for Untrusted Network"
-            }
-        },
-        "trustedSubnetName": {
-            "type": "string",
-            "defaultValue": "Trust",
-            "metadata": {
-                "description": "Subnet for Trusted Network"
-            }
-        },
-        "trustedSubnetPrefix": {
-            "type": "string",
-            "defaultValue": "10.0.2.0/24",
-            "metadata": {
-                "description": "CIDR for Trusted Network"
-            }
-        },
-        "mgmtPublicIPName": {
+        "mgmtPublicIPDns": {
             "type": "string",
             "metadata": {
-                "description": "Name prefix of public IP resource for Management interface of VM-Series firewall."
+                "description": "DNS Name prefix of public IP resource for Management interface of VM-Series firewall.  Name must be globally unique."
             },
-            "defaultValue": "mgmt-pip"
+            "defaultValue": "Enter a globally unique name"
         },
-        
-        "loadBalancerName": {
+        "networkSecurityGroupInboundIP": {
             "type": "string",
             "metadata": {
-                "description": "Name for the outbound load balancer resource."
-            },
-            "defaultValue": "outbound-lb"
+                "description": "Your source public IP address. Added to the inbound NSG on eth0 (MGMT), to restrict access to the deployment."
+            }
         },
-        "loadBalancerIP": {
+        "imageVersion": {
             "type": "string",
+            "allowedValues": [
+                "latest",
+                "8.1.0",
+                "8.0.0"
+                ],
+            "defaultValue": "latest",
             "metadata": {
-                "description": "IP Address for the outbound load balancer resource in the Trust network."
-            },
-            "defaultValue": "10.0.2.4"
+                "description": "VM-Series Firewall PAN OS Version"
+            }
         },
         "firewallModel": {
             "type": "string",
@@ -257,7 +209,12 @@
         "rgname"     : "[resourceGroup().name]",
         "storageName": "[toLower(parameters('storageName'))]",
         "networkSecurityGroupName": "[concat(variables('rgname'), '-nsg' )]",
-
+        "hubLoadBalancerSku": "Standard",
+        "loadBalancerName": "[concat(variables('rgname'), '-outbound-lb' )]",
+        "MgmtSubnetName" : "[concat(parameters('virtualNetworkName'), '-mgmt-subnet')]",
+        "untrustedSubnetName" : "[concat(parameters('virtualNetworkName'), '-untrust-subnet')]",
+        "trustedSubnetName" : "[concat(parameters('virtualNetworkName'), '-trust-subnet')]",
+        "mgmtPublicIPName" : "[concat(variables('rgname'), '-mgmt-pip-', variables('namingInfix'))]",
         "nicNameWorker": "[concat ('workernic', variables('namingInfix'))]",
         "WorkerPublicIPAddressName": "[concat('workerPip', variables('namingInfix'))]",
         "worker-node-name": "[concat('worker-node',variables('namingInfix'))]",
@@ -356,13 +313,13 @@
                         "value": "[parameters('virtualNetworkAddressPrefix')]"
                     },
                     "mgmtSubnetName": {
-                        "value": "[parameters('mgmtSubnetName')]"
+                        "value": "[variables('mgmtSubnetName')]"
                     },
                     "untrustSubnetName": {
-                        "value": "[parameters('untrustedSubnetName')]"
+                        "value": "[variables('untrustedSubnetName')]"
                     },
                     "trustSubnetName": {
-                        "value": "[parameters('trustedSubnetName')]"
+                        "value": "[variables('trustedSubnetName')]"
                     },
                     "mgmtSubnetPrefix": {
                         "value": "[parameters('mgmtSubnetPrefix')]"
@@ -398,7 +355,7 @@
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WorkerPublicIPAddressName'))]"
                             },
                             "subnet": {
-                                "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', parameters('mgmtSubnetName'))]"
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', variables('mgmtSubnetName'))]"
                             }
                         }
                     }
@@ -488,7 +445,7 @@
                 },
                 "parameters": {
                     "loadBalancerSku": {
-                        "value": "[parameters('hubLoadBalancerSku')]"
+                        "value": "[variables('hubLoadBalancerSku')]"
                     },
                     "location": {
                         "value": "[variables('location')]"
@@ -500,10 +457,10 @@
                         "value": "[parameters('virtualNetworkName')]"
                     },
                     "subnetName": {
-                        "value": "[parameters('trustedSubnetName')]"
+                        "value": "[variables('trustedSubnetName')]"
                     },
                     "loadBalancerName": {
-                        "value": "[parameters('loadBalancerName')]"
+                        "value": "[variables('loadBalancerName')]"
                     },
                     "loadBalancerIP": {
                         "value": "[parameters('loadBalancerIP')]"
@@ -529,7 +486,7 @@
                 },
                 "parameters": {
                     "loadBalancerSku": {
-                        "value": "[parameters('hubLoadBalancerSku')]"
+                        "value": "[variables('hubLoadBalancerSku')]"
                     },
                     "baseUrl": {
                         "value": "[variables('baseUrl')]"
@@ -550,19 +507,19 @@
                         "value": "[parameters('virtualNetworkName')]"
                     },
                     "mgmtSubnetName": {
-                        "value": "[parameters('mgmtSubnetName')]"
+                        "value": "[variables('mgmtSubnetName')]"
                     },
                     "inboundSubnetName": {
-                        "value": "[parameters('trustedSubnetName')]"
+                        "value": "[variables('trustedSubnetName')]"
                     },
                     "outboundSubnetName": {
-                        "value": "[parameters('untrustedSubnetName')]"
+                        "value": "[variables('untrustedSubnetName')]"
                     },
                     "loadBalancerName": {
-                        "value": "[parameters('loadBalancerName')]"
+                        "value": "[variables('loadBalancerName')]"
                     },
                     "mgmtPublicIPName": {
-                        "value": "[concat('out', parameters('mgmtPublicIPName'))]"
+                        "value": "[variables('mgmtPublicIPName')]"
                     },
                     "mgmtPublicIPDns":{
                         "value": "[concat('out', parameters('mgmtPublicIPDns'))]"
