@@ -480,7 +480,6 @@ def main():
 
         vmss_hostname_list = []
         for vm in vmss_vm_list:
-            import pdb; pdb.set_trace()
             vm_hostname = vm.os_profile.as_dict()['computer_name']
             vmss_hostname_list.append(unicode(vm_hostname))
             try:
@@ -493,7 +492,6 @@ def main():
                 db_vm_info = table_service.get_entity(vmss_table, spoke, vm_hostname)
             except AzureMissingResourceHttpError:
                 # New VM detected. Create an entity in the DB.
-                # create_db_entity(handle, tb_name, spoke, vm_details, vmss_name, subs_id=''):
                 ok = create_db_entity(table_service,
                                       vmss_table,
                                       spoke,
