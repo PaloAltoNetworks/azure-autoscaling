@@ -213,6 +213,20 @@
                 "description": "The maximum number of FWs that can be deployed into the VM Scale Set."
             }
         },
+        "scaleInThreshold": {
+            "type": "int",
+            "defaultValue": 20,
+            "metadata": {
+                "description": "The Threshold below which FW VM scale in kicks in."
+            }
+        },
+        "scaleOutThreshold": {
+            "type": "int",
+            "defaultValue": 80,
+            "metadata": {
+                "description": "The Threshold above which FW VM scale out kicks in."
+            }
+        },
         "autoScaleMetric": {
              "type": "string",
              "allowedValues": [
@@ -602,6 +616,12 @@
                     },
                     "autoScaleMetric": {
                         "value": "[parameters('autoScaleMetric')]"
+                    },
+                    "scaleInThreshold": {
+                        "value": "[parameters('scaleInThreshold')]"
+                    },
+                    "scaleOutThreshold": {
+                        "value": "[parameters('scaleOutThreshold')]"
                     }
                 }
              }

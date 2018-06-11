@@ -146,6 +146,20 @@
              "metadata": {
                  "description": "Select the metric on which auto scale events should be triggered."
              } 
+        },
+        "scaleInThreshold": {
+            "type": "int",
+            "defaultValue": 20,
+            "metadata": {
+                "description": "The Threshold below which FW VM scale in kicks in."
+            }
+        },
+        "scaleOutThreshold": {
+            "type": "int",
+            "defaultValue": 80,
+            "metadata": {
+                "description": "The Threshold above which FW VM scale out kicks in."
+            }
         }
     },
     "variables": {
@@ -331,7 +345,7 @@
                                     "timeWindow": "PT10M",
                                     "timeAggregation": "Average",
                                     "operator": "GreaterThan",
-                                    "threshold": 70
+                                    "threshold": "[parameters('scaleOutThreshold')]"
                                 },
                                 "scaleAction": {
                                     "direction": "Increase",
@@ -347,7 +361,7 @@
                                     "metricResourceUri": "[variables('scaleMetricMap')[parameters('autoScaleMetric')].metricResourceUri]",
                                     "operator": "LessThan",
                                     "statistic": "Average",
-                                    "threshold": 20,
+                                    "threshold": "[parameters('scaleInThreshold')]",
                                     "timeAggregation": "Average",
                                     "timeGrain": "PT1M",
                                     "timeWindow": "PT10M"
