@@ -120,7 +120,6 @@ def get_devices_in_dg(ip, key, dg_name):
     url += "&cmd=<show><devices><all>"
     url += "</all></devices></show>"
     ok, result = execute_panorama_command(url)
-    print result
 
     # Get devices which were known to be in the given DG.
     device_list = []
@@ -173,7 +172,6 @@ def deactivate_license_in_panorama(ip, key, serial_no):
         logger.error('Deactivation of VM with serial %s failed' % serial_no)
         return False, result
 
-    print result
     return True, result
 
 
@@ -512,9 +510,6 @@ def main():
                             for x in db_vms_list if x.PartitionKey == spoke]
 
         vms_to_delic = [x for x in db_hostname_list if x.get('hostname') not in vmss_hostname_list]
-        print db_hostname_list
-        print vmss_hostname_list
-        print vms_to_delic
 
         if vms_to_delic:
             logger.info('The following VMs need to be delicensed %s' % vms_to_delic)
