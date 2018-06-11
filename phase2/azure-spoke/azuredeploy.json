@@ -318,7 +318,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/SetupInternalLoadBalancer"
+                "Microsoft.Resources/deployments/SetupNSG"
             ],
             "properties": {
                 "mode": "Incremental",

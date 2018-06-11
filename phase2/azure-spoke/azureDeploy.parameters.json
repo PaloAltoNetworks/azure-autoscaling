@@ -3,58 +3,37 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
         "hubResourceGroupName": {
-            "value": "rr-hub-scale"
+            "value": "rr-hub-1"
         },
         "hubVnetName": {
-            "value": "hubvnet"
+            "value": "rr-hub1-vnet"
         },
         "hubLoadBalancerIP": {
             "value": "10.0.2.4"
         },
-        "networkSecurityGroupName": {
-            "value": "nsg-mgmt"
-        },
         "networkSecurityGroupInboundSrcIP": {
-             "value": "1.1.1.1/32"
+             "value": "199.167.52.5/32"
         },
         "virtualNetworkName": {
-            "value": "rr-spoke-vnet6"
+            "value": "rr-spoke2-vnet"
         },
         "virtualNetworkAddressPrefix": {
             "value": "192.168.0.0/21"
         },
-        "MgmtSubnetName": {
-            "Value": "Mgmt"
-        },
         "mgmtSubnetPrefix": {
             "value": "192.168.0.0/24"
         },
-        "untrustedSubnetName": {
-            "value": "Untrust"
-        },
         "untrustedSubnetPrefix": {
             "value": "192.168.1.0/24"
-        },
-        "trustedSubnetName": {
-            "value": "Trust"
         },
         "trustedSubnetPrefix": {
             "value": "192.168.2.0/24"
         },
         "appGatewayDnsName": {
-            "value": "rrspoke6appgw"
-        },
-        "appGatewaySubnetName": {
-            "value": "AppGWSubnet"
+            "value": "rrspoke2appgw"
         },
         "appGatewaySubnetPrefix": {
             "value": "192.168.3.0/24"
-        },
-        "internalLoadBalancerName": {
-            "value": "myPrivateLB"
-        },
-        "backendSubnetName": {
-            "Value": "backendSubnet"
         },
         "backendSubnetPrefix": {
             "value": "192.168.4.0/24"
@@ -65,17 +44,11 @@
         "firewallModel": {
              "value": "byol"
         },
-        "firewallVmName": {
-             "value": "VM-Series"
-        },
         "firewallVmSize": {
              "value": "Standard_D3_v2"
         },
-        "MgmtPublicIPAddressName": {
-             "value": "rrspoke6mgmt"
-        },
         "storageAccountName": {
-            "value": "rrspoke6storage"
+            "value": "rrspoke2storage"
         },
         "storageAccountType": {
             "value": "Standard_LRS"
@@ -92,20 +65,17 @@
         "sshPublicKey": {
             "value": ""
         },
-        "customstorageaccount": {
+        "bootstrapStorageAccount": {
             "value": "rrbootstrapstroage"
         },
-        "customaccesskey": {
+        "bootstrapStorageAccountAccessKey": {
             "value": "g48c91swtfOhJPu/+kg815SiF4xUP2SwRcvfC0RN7xxfBQVmsahPnxIIZWBzMQ8gfRYAU9baIDKYe9qSqDtBGQ=="
         },
-        "customfileshare": {
-            "value": "rrbootstrapstorage"
+        "bootstrapFileShare": {
+            "value": "rr-spoke-2"
         },
-        "customsharedirectory": {
+        "bootstrapSharedDir": {
             "value": ""
-        },
-        "appInsights": {
-            "value": "rrspoke6appinsights"
         }
   }
 }
