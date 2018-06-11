@@ -529,15 +529,30 @@ def main():
                                                          panorama_key,
                                                          device.get('serial'))
                 if not ok:
-                    logger.error('Deactivation of VM %s failed. will retry' % device.get('hostname'))
+                    logger.error('Deactivation of VM %s failed with error %s. will retry' % (device.get('hostname'), res))
                     continue
+                logger.info('Deactivation of VM %s successful' % device.get('RowKey'))
+                
                 # Delete the entry from the table service as well.
                 table_service.delete_entity(vmss_table, spoke, device.get('hostname')) 
         else:
             logger.debug('No VMs need to be delicensed. No-op')
-    all_db_vms_list = table_service.query_entities(vmss_table)
+
+    # Assume there is a scenario where, the spoke is deleted in Azure
+    # the VMs are destroyed. We will not get track these VMs since we
+    # we will not track the spoke. Identifying such VMs here.
+    all_db_vms_list = table_service.query_entities(vmss_table)a
     for vm in all_db_vms_list:
-        logger.info('DB VM %s' % vm.get('hostname'))
+        if vm.get('PartitionKey') not in managed_spokes:
+            logger.info("VM %s is orphaned since the spoke does not exist" % vm.get('RowKey'))
+                 ok, res = deactivate_license_in_panorama(panorama_ip,
+                                                          panorama_key,
+                                                          vm.get('serial'))
+                if not ok:
+                    logger.error('Deactivation of VM %s failed. will retry' % device.get('hostname'))
+                    continue
+                # Delete the entry from the table service as well.
+                table_service.delete_entity(vmss_table, spoke, device.get('hostname')) 
     return 0
 
 if __name__ == "__main__":
