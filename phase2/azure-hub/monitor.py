@@ -347,10 +347,16 @@ class Azure:
 
         # Populate the list of spokes managed by this Azure hub.
         rg_list = self.resource_client.resource_groups.list()
-        self.managed_spokes = [x.name for x in rg_list\
-                         if x.tags and x.tags.get(self.HUB_MANAGED_TAG, None) == self.hub_name]
-        self.new_spokes = [x.name for x in rg_list\
-                   if x.tags and x.tags.get(self.RG_RULE_PROGRAMMED_TAG, 'Yes') == 'No']
+        self.managed_spokes = []
+        self.new_spokes = []
+        for rg in rg_list:
+            if rg.tags and rg.tags.get(self.HUB_MANAGED_TAG, None) == self.hub_name:
+                self.managed_spokes.append(rg.name)
+                if rg.tags.get(self.RG_RULE_PROGRAMMED_TAG, 'Yes') == 'No':
+                    self.new_spokes.append(rg.name)
+        self.logger.debug('%s identified as spokes managed by %s' % (rg.managed_spokes, rg.hub_name))
+        if self.new_spokes:
+            self.logger.info('%s identified as new spokes to be programmed by %s' % (rg.new_spokes, rg.hub_name))
 
     
     def filter_vmss(self, spoke, vmss_name):
