@@ -1,9 +1,8 @@
 # azure-autoscaling
 Azure autoscaling solution using VMSS and AppInsights
 
-![alt_text](topology.png)
 
-#Guide coming soon
+# Guide coming soon
 
 # Supports PAYG bundle1/bundle2/BYOL only for now
 
