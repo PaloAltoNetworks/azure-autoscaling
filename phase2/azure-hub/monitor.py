@@ -169,6 +169,13 @@ class Panorama:
         url += templ_name + "</name></template></commit-all>"
         ok, res = self.execute_command(url)
         return ok, res
+        
+        url = "https://" + self.ip + "/api/?type=commit&key=" + self.key
+        # Commit the changes to the template in Panorama
+        url += "&cmd=<commit-all><template-stack><name>"
+        url += templ_name + '-tmplstk' + "</name></template-stack></commit-all>"
+        ok, res = self.execute_command(url)
+        return ok, res
 
 
     def get_devices_in_dg(self, dg_name):
@@ -301,22 +308,22 @@ class Azure:
     ILB_NAME = 'myPrivateLB'
     ALPHANUM = r'[^A-Za-z0-9]+'
 
-    def __init__(self, cred, subs_id, hub, storage, pan_handle, logger = None):
-        self.credentials = cred
-        self.subscription_id = subs_id
-        self.logger = logger
-        self.hub_name = hub
-        self.storage_name = storage
-        self.panorama_handler = pan_handle
-        self.vmss_table_name = re.sub(self.ALPHANUM, '', hub + 'vmsstable')
+
+    def __init__(self, cred, subs_id, hub, storage, logger = None):
+        self.credentials      = cred
+        self.subscription_id  = subs_id
+        self.logger           = logger
+        self.hub_name         = hub
+        self.storage_name     = storage
+        self.vmss_table_name  = re.sub(self.ALPHANUM, '', hub + 'vmsstable')
 
         try:
             self.resource_client = ResourceManagementClient(cred, subs_id)
-            self.compute_client = ComputeManagementClient(cred, subs_id)
-            self.network_client = NetworkManagementClient(cred, subs_id)
-            self.store_client = StorageManagementClient(cred, subs_id)
-            store_keys = self.store_client.storage_accounts.list_keys(hub, storage).keys[0].value
-            self.table_service = TableService(account_name=storage,
+            self.compute_client  = ComputeManagementClient(cred, subs_id)
+            self.network_client  = NetworkManagementClient(cred, subs_id)
+            self.store_client    = StorageManagementClient(cred, subs_id)
+            store_keys           = self.store_client.storage_accounts.list_keys(hub, storage).keys[0].value
+            self.table_service   = TableService(account_name=storage,
                                               account_key=store_keys)
         except Exception as e:
             self.logger.error("Getting Azure Infra handlers failed %s" % str(e))
@@ -337,15 +344,18 @@ class Azure:
                           if x.type == self.VMSS_TYPE and self.filter_vmss(rg, x.name)]
             if fw_vm_list:
                 rg_params = {'location': self.resource_client.resource_groups.get(rg).location}
-                rg_params.update(tags={
+                rg_params.update(
+                                    tags={
                                          self.RG_RULE_PROGRAMMED_TAG : 'No',
                                          self.HUB_MANAGED_TAG        : self.hub_name
-                                      })
+                                      }
+                                )
                 self.resource_client.resource_groups.create_or_update(rg, rg_params)
                 self.logger.info("RG %s marked as a spoke managed by this hub %s" % (rg, self.hub_name))
         # End -> List out all RGs and identify new spokes to mark them with tags.
 
-        # Populate the list of spokes managed by this Azure hub.
+        # Populate the list of spokes managed by this Azure hub and
+        # new spokes that have just joined that needs to be programmed.
         rg_list = self.resource_client.resource_groups.list()
         self.managed_spokes = []
         self.new_spokes = []
@@ -381,6 +391,7 @@ class Azure:
                 return ilb_private_ip
         return None
 
+
     def get_appinsights_instr_key(self, spoke):
         for resource in self.resource_client.resources.list_by_resource_group(spoke):
             # Get the Appinsights instance where the custom metrics are being
@@ -394,6 +405,7 @@ class Azure:
                 return instr_key
         return None
 
+
     def set_spoke_as_programmed(self, spoke):
         spoke_params = {'location': self.resource_client.resource_groups.get(spoke).location}
         spoke_tags = self.resource_client.resource_groups.get(spoke).tags
@@ -401,6 +413,7 @@ class Azure:
         spoke_params.update(tags=spoke_tags)
         self.resource_client.resource_groups.create_or_update(spoke, spoke_params)
         self.logger.info("RG %s marked as programmed and spoke managed by this hub %s" % (spoke, self.hub_name))
+
 
     def create_new_cosmos_table(self, table_name):
         # Create the Cosmos DB if it does not exist already
@@ -416,8 +429,10 @@ class Azure:
                 return False
         return True
 
+
     def clear_cosmos_table(self, table_name):
         self.table_service.delete_table(table_name)
+
 
     def get_vmss_in_spoke(self, spoke):
         vmss_list = [x.name for x in self.resource_client.resources.list_by_resource_group(spoke)
@@ -428,13 +443,16 @@ class Azure:
             self.logger.error("No VMSS found in Resource Group %s" % spoke)
             return None
 
+
     def get_vms_in_vmss(self, spoke, vmss_name):
         return self.compute_client.virtual_machine_scale_set_vms.list(spoke, vmss_name)
+
 
     def get_vm_in_cosmos_db(self, spoke, vm_hostname):
         try:
             db_vm_info = self.table_service.get_entity(self.vmss_table_name,
-                                                        spoke, vm_hostname)
+                                                       spoke,
+                                                       vm_hostname)
         except AzureMissingResourceHttpError:
             self.logger.info("New VM %s found in spoke %s" % (vm_hostname, spoke))
             return None
@@ -442,30 +460,26 @@ class Azure:
             self.logger.error("Querying for %s failed" % vm_hostname)
             return None
         else:
-            # IF possible update status TODO
             self.logger.debug("VM %s is available in VMSS, Pan and DB" % (vm_hostname))
         return db_vm_info
 
-    #'name'       : global_device['@name'],
-    #'hostname'   : global_device['hostname'],
-    #'serial'     : global_device['serial'],
-    #'ip-address' : global_device['ip-address'],
-    #'connected'  : global_device['connected'],
-    #'deactivated': global_device['deactivated']
+
     def create_db_entity(self, spoke, vm_details):
         vm = Entity()
+
         # PartitionKey is nothing but the spoke name
-        vm.PartitionKey = spoke
-        # RowKey is nothing but the VM name itself.
+        vm.PartitionKey  = spoke
+        # RowKey is nothing but the VM Host name itself.
         vm.RowKey = vm_details['hostname']
-        vm.name = vm_details['name']
-        vm.serial_no = vm_details['serial']
-        vm.ip_addr = vm_details['ip-address']
-        vm.connected = vm_details['connected']
-        vm.deactivated = vm_details['deactivated']
-        vm.subs_id = self.subscription_id
+        vm.name          = vm_details['name']
+        vm.serial_no     = vm_details['serial']
+        vm.ip_addr       = vm_details['ip-address']
+        vm.connected     = vm_details['connected']
+        vm.deactivated   = vm_details['deactivated']
+        vm.subs_id       = self.subscription_id
         vm.delicensed_on = 'not applicable'
         vm.is_delicensed = 'No'
+
         try:
             self.table_service.insert_entity(self.vmss_table_name, vm)
             self.logger.info("VM %s with serial no. %s in db" % (vm_details['hostname'], vm_details['serial']))
@@ -473,6 +487,7 @@ class Azure:
             self.logger.info("Insert entry to db for %s failed with error %s" % (vm_details['hostname'], e))
             return False
         return True
+
 
     def get_fw_vms_in_cosmos_db(self, spoke=None):
         if spoke:
@@ -487,6 +502,7 @@ class Azure:
         else:
             return db_vms_list
 
+
     def delete_vm_from_cosmos_db(self, spoke, vm_name):
         self.table_service.delete_entity(self.vmss_table_name, spoke, vm_name) 
 
@@ -497,24 +513,32 @@ def main():
     panorama_ip, panorama_key = get_panorama()
     my_hub_name, my_storage_name = get_hub_and_storage_name()
 
-    panorama = Panorama(panorama_ip, panorama_key, logger)
-    azure_handle = Azure(credentials, subscription_id, 
-                         my_hub_name, my_storage_name, panorama, logger)
+    panorama = Panorama(panorama_ip,
+                        panorama_key,
+                        logger)
+
+    azure_handle = Azure(credentials,
+                         subscription_id,
+                         my_hub_name,
+                         my_storage_name,
+                         logger)
+
     azure_handle.create_new_cosmos_table(azure_handle.vmss_table_name)
     #azure_handle.clear_cosmos_table(azure_handle.vmss_table_name)
 
     # Program the new spokes for NAT and Instrumentation Key.
     for spoke in azure_handle.new_spokes:
-        ilb_ip_addr = azure_handle.get_ilb_ip(spoke)
         count = 0
         # Another constraint! The DG in Panorama has to be named 
         # as <spoke_name> + '-dg'
         dg_name = panorama.get_dg_name_of_spoke(spoke) 
+
+        ilb_ip_addr = azure_handle.get_ilb_ip(spoke)
         if ilb_ip_addr:
-            logger.info('%s - NAT IP address for the ILB: ' % ilb_private_ip)
+            logger.info('%s - NAT IP address for the ILB: ' % ilb_ip_addr)
             ok, res = panorama.set_ilb_nat_address(dg_name, ilb_ip_addr)
             if not ok:
-                logger.error("Not able to set ILB NAT Address %s in DG %s" % (ilb_private_ip, dg_name))
+                logger.error("Not able to set ILB NAT Address %s in DG %s" % (ilb_ip_addr, dg_name))
                 logger.error("Error %s" % res)
                 continue
             count += 1
@@ -606,8 +630,8 @@ def main():
             logger.debug('No VMs need to be delicensed. No-op')
 
     # Assume there is a scenario where, the spoke is deleted in Azure
-    # the VMs are destroyed. We will not get track these VMs since we
-    # we will not track the spoke. Identifying such VMs here.
+    # the VMs are destroyed. We will not get track to these VMs since we
+    # we cannot track the spoke. Identifying such orphaned VMs here.
     all_db_vms_list = azure_handle.get_fw_vms_in_cosmos_db()
     for vm in all_db_vms_list:
         if vm.get('PartitionKey') not in azure_handle.managed_spokes:
