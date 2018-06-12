@@ -2,7 +2,7 @@
 Azure autoscaling solution using VMSS and AppInsights
 
 
-# Guide coming soon
+# Guide and templates are work in progress...feel free to test and ask questions or suggest changes
 
 # Supports PAYG bundle1/bundle2/BYOL
 
