@@ -13,9 +13,9 @@ independently scaling the VM-Series firewalls with the changing workloads.
 
 # Requirements  
 ***Please speak to your Palo Alto Networks resource for access to the Panorama 2.0 plugin.***   
-A Panorama virtual or physical appliance  
-Panorama Plugin v2.0   
-A working Azure Service Principal.
+- A Panorama virtual or physical appliance  
+- Panorama Plugin v2.0   
+- A working Azure Service Principal.
 For information on setting up an Azure Service Princial [Click Here](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) 
 
 # Deployment Guide    
