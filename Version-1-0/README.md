@@ -16,11 +16,11 @@ independently scaling the VM-Series firewalls with the changing workloads.
 - A Panorama virtual or physical appliance  
 - Panorama Plugin v2.0   
 - A working Azure Service Principal.
-For information on setting up an Azure Service Princial [Click Here](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) 
+For information on setting up an Azure Service Princial [Click HERE](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) 
 
 # Deployment Guide    
 The deployment guide can be found 
-[here](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)
+[HERE](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)
 
 # Support Policy
 ***Community-Supported aka Best Effort:***  
