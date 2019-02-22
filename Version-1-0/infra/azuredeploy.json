@@ -23,7 +23,7 @@
         },
         "repoURL": {
             "type": "string",
-            "defaultValue": "https://github.com/PaloAltoNetworks/azure-autoscaling/Version-1-0/azure-autoscaling.git",
+            "defaultValue": "https://github.com/PaloAltoNetworks/azure-autoscaling.git",
             "metadata": {
                 "description": "The URL for the GitHub repository that hosts the Azure Function bits."
             }
