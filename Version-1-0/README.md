@@ -16,7 +16,8 @@ A Panorama virtual or physical appliance
 Panorama Plugin v2.0 Please speak to your Palo Alto Networks resource for access to the Panorama 2.0 plugin. 
 
 ***Deployment Guide***
-The deployment guide can be found [here](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto Scaling Templates for VM-Series on Azure.pdf)
+The deployment guide can be found 
+[here](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto Scaling Templates for VM-Series on Azure.pdf)
 
 # Support Policy
 ***Community-Supported aka Best Effort***  
