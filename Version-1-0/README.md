@@ -9,7 +9,7 @@ on Azure that are designed to manage sudden surges in demand for application wor
 independently scaling the VM-Series firewalls with the changing workloads.
 
 
-![alt text](/Version-1.0/arm_scale2-1.PNG?raw=true "Topology for the Auto Scaling VM-Series Firewalls on Azure Version 1.0")
+![alt text](/Version-1-0/arm_scale2-1.PNG?raw=true "Topology for the Auto Scaling VM-Series Firewalls on Azure Version 1.0")
 
 **Requirements**
 A Panorama virtual or physical appliance
