@@ -17,7 +17,7 @@ Panorama Plugin v2.0 Please speak to your Palo Alto Networks resource for access
 
 ***Deployment Guide***
 The deployment guide can be found 
-[here]("https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto Scaling Templates for VM-Series on Azure.pdf")
+[here](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)
 
 # Support Policy
 ***Community-Supported aka Best Effort***  
