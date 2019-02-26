@@ -145,6 +145,10 @@
                             "value": "~1"
                         },
                         {
+                            "name": "Project",
+                            "value": "Version-1-0"
+                        },
+                        {
                             "name": "AzureWebJobsStorage",
                             "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]"
                         },
