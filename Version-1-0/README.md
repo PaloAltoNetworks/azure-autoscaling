@@ -23,8 +23,8 @@ The deployment guide can be found
 [HERE](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)  
 
 **Gotchas**  
-***Be sure you place the Virtual Router in the Template Stack NOT the template***  
-***No higher than PAN-OS 8.1.6 for Panorama is recommended***  
+- Be sure you place the Virtual Router in the Template Stack NOT the template   
+- No higher than PAN-OS 8.1.6 for Panorama is recommended  
 
 # Deploy Buttons
 
