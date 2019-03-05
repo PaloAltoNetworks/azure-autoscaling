@@ -36,7 +36,7 @@
         "applicationLoadBalancerIP": {
             "type": "string",
             "metadata": {
-                "description": "IP Address of the Load Balancer frontending the app. Use the ILB subnet range below."
+                "description": "IP Address of the Load Balancer frontending the app. Use an IP address from the trusted subnet range below."
             }
         },
         "inboundFirewallResourceGroupName": {
