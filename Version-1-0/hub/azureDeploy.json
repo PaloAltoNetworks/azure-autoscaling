@@ -11,28 +11,28 @@
         },
         "virtualNetworkAddressPrefix": {
             "type": "string",
-            "defaultValue": "10.0.0.0/16",
+            "defaultValue": "172.16.0.0/16",
             "metadata": {
                 "description": "CIDR for Virtual Network."
             }
         },
         "mgmtSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.0.0.0/24",
+            "defaultValue": "172.16.0.0/24",
             "metadata": {
                 "description": "CIDR for Management subnet."
             }
         },
         "untrustSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.0.1.0/24",
+            "defaultValue": "172.16.1.0/24",
             "metadata": {
                 "description": "CIDR for Untrust Network."
             }
         },
         "trustSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.0.2.0/24",
+            "defaultValue": "172.16.2.0/24",
             "metadata": {
                 "description": "CIDR for Trust Network."
             }
@@ -42,7 +42,7 @@
             "metadata": {
                 "description": "IP Address for the Internal Load Balancer in front of the Hub VM-Series Firewall."
             },
-            "defaultValue": "10.0.2.4"
+            "defaultValue": "172.16.2.4"
         },
         "networkSecurityGroupInboundIP": {
             "type": "string",
