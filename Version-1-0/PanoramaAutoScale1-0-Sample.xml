@@ -76,7 +76,7 @@
               <accept-dhcp-domain>no</accept-dhcp-domain>
             </dhcp-client>
           </type>
-          <hostname>jppanormaAWS21</hostname>
+          <hostname>panoramasampleconfig</hostname>
         </system>
         <setting>
           <management>
@@ -93,7 +93,7 @@
                   <accept-dhcp-domain>no</accept-dhcp-domain>
                 </dhcp-client>
               </type>
-              <hostname>jppanormaAWS21</hostname>
+              <hostname>panoramasampleconfig</hostname>
               <username>pandemo</username>
               <public-key>c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFEUjhKcENzL1EvSWJaa05hcDJISFFUYUw5c2M0emxsNVdYNHoyeW5LOUowN1RsL29wM2Uyb0d1eWlQeUJicW1MQ3ZWb0dJTXIzWjBMN0VBbXAyaDMzYm9HZGdlbkE4Rno1Um1tQ20yZUpubXNOWVVwWG1vdDZrTFNFc01kYU5TajRYaFN6VTkxWXlNNlZrd3lhL1BHQmN0V2pGTlNBUFArQlltYjBsTG1weHEyZEpNcGlsYnFZWjVMdVkzWnZVZmRZT25VdmRyK05CcGRqNmdOTlhhaXBCcCttazVtcjhvNlV3THlTMjI1UG1aQ1VQYm1FZ2ZWbG9LMVZpeHhrdDJSVVhFZ0l4bWVMeTZPTE54bzJtdkVzeXFMNnhiRmFQRlROTUVoU2EwcUN3VGdxQ0pHamtSdXhZdUZvNVBhRGhWNFV1S0s3a0xtRlk0dlhJSWNwL2pwNmoK</public-key>
             </initcfg>
