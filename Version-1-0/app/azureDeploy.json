@@ -31,7 +31,7 @@
             "metadata": {
                 "description": "IP Address of the outbound Load Balancer in the hub, if the app is going to be connected to a firewall."
             },
-            "defaultValue": "1.2.3.4"
+            "defaultValue": "10.0.1.4"
         },
         "applicationLoadBalancerIP": {
             "type": "string",
