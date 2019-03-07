@@ -23,7 +23,8 @@ The deployment guide can be found
 [HERE](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)  
 
 **Panorama Config File**   
-a sample Panorama configuration file has been included in this GitHub repository   
+a sample Panorama configuration file has been included in this GitHub repository 
+user: pandemo pwd: Dem0pa$$w0rd     
 
 **Gotchas**  
 - Be sure you place the Virtual Router in the Template Stack NOT the template   
