@@ -2,8 +2,8 @@
 <config version="8.1.0" urldb="paloaltonetworks">
   <mgt-config>
     <devices>
-      <entry name="000000000000000"/>
       <entry name="111111111111111"/>
+      <entry name="222222222222222"/>
     </devices>
     <users>
       <entry name="admin">
@@ -24,7 +24,7 @@
         <phash>$1$rpfbywac$DeEoIY5lPJy8lK8RRyi1g0</phash>
       </entry>
       <entry name="__azure">
-        <phash>$1$xpwglawm$G/xUZWT8KSiIIdriTL6J3.</phash>
+        <phash>$1$hbntblrc$mGPKfMj/gcahms8cMwyTY0</phash>
         <permissions>
           <role-based>
             <panorama-admin>yes</panorama-admin>
@@ -294,7 +294,7 @@
       <device-group>
         <entry name="Azure-dgspoke">
           <devices>
-            <entry name="111111111111111">
+            <entry name="222222222222222">
               <vsys>
                 <entry name="vsys1"/>
               </vsys>
@@ -446,7 +446,7 @@
         </entry>
         <entry name="Azure-dghub">
           <devices>
-            <entry name="000000000000000">
+            <entry name="111111111111111">
               <vsys>
                 <entry name="vsys1"/>
               </vsys>
@@ -609,78 +609,10 @@
                         <member>ethernet1/1</member>
                         <member>ethernet1/2</member>
                       </interface>
-                      <routing-table>
-                        <ip>
-                          <static-route>
-                            <entry name="AzurePanPluginDefaultRoute">
-                              <nexthop>
-                                <ip-address>192.168.2.1</ip-address>
-                              </nexthop>
-                              <bfd>
-                                <profile>None</profile>
-                              </bfd>
-                              <path-monitor>
-                                <enable>no</enable>
-                                <failure-condition>any</failure-condition>
-                                <hold-time>2</hold-time>
-                              </path-monitor>
-                              <interface>ethernet1/2</interface>
-                              <metric>10</metric>
-                              <destination>0.0.0.0/0</destination>
-                              <route-table>
-                                <unicast/>
-                              </route-table>
-                            </entry>
-                            <entry name="AzurePanPluginAppGwSubnetRoute">
-                              <nexthop>
-                                <ip-address>192.168.1.1</ip-address>
-                              </nexthop>
-                              <bfd>
-                                <profile>None</profile>
-                              </bfd>
-                              <path-monitor>
-                                <enable>no</enable>
-                                <failure-condition>any</failure-condition>
-                                <hold-time>2</hold-time>
-                              </path-monitor>
-                              <interface>ethernet1/1</interface>
-                              <metric>10</metric>
-                              <destination>192.168.3.0/24</destination>
-                              <route-table>
-                                <unicast/>
-                              </route-table>
-                            </entry>
-                            <entry name="AzurePanPluginAzureHealthCheck">
-                              <nexthop>
-                                <ip-address>192.168.1.10</ip-address>
-                              </nexthop>
-                              <bfd>
-                                <profile>None</profile>
-                              </bfd>
-                              <path-monitor>
-                                <enable>no</enable>
-                                <failure-condition>any</failure-condition>
-                                <hold-time>2</hold-time>
-                              </path-monitor>
-                              <interface>ethernet1/1</interface>
-                              <metric>10</metric>
-                              <destination>168.63.129.16/32</destination>
-                              <route-table>
-                                <unicast/>
-                              </route-table>
-                            </entry>
-                          </static-route>
-                        </ip>
-                      </routing-table>
                     </entry>
                   </virtual-router>
                   <profiles>
-                    <interface-management-profile>
-                      <entry name="probe">
-                        <http>yes</http>
-                        <ssh>yes</ssh>
-                      </entry>
-                    </interface-management-profile>
+                    <interface-management-profile/>
                   </profiles>
                 </network>
                 <deviceconfig>
@@ -715,7 +647,7 @@
             </shared>
           </config>
           <devices>
-            <entry name="111111111111111"/>
+            <entry name="222222222222222"/>
           </devices>
         </entry>
         <entry name="Azure-tmplhub">
@@ -824,7 +756,7 @@
             </devices>
           </config>
           <devices>
-            <entry name="000000000000000"/>
+            <entry name="111111111111111"/>
           </devices>
         </entry>
       </template-stack>
@@ -835,7 +767,7 @@
               <subscription-id>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</subscription-id>
               <client-id>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</client-id>
               <client-secret>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</client-secret>
-              <tenant-id>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</tenant-id>
+              <tenant-id>xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</tenant-id>
             </entry>
           </service-principal>
           <autoscaling>
