@@ -619,7 +619,7 @@
                   <setting>
                     <azure-advanced-metrics>
                       <enable>yes</enable>
-                      <instrumentation-key>4d073510-19cf-4e59-9f54-db8ff7d1d571</instrumentation-key>
+                      <instrumentation-key></instrumentation-key>
                       <update-interval>1</update-interval>
                     </azure-advanced-metrics>
                   </setting>
