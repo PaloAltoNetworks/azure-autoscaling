@@ -1,10 +1,7 @@
 <?xml version="1.0"?>
 <config version="8.1.0" urldb="paloaltonetworks">
   <mgt-config>
-    <devices>
-      <entry name="111111111111111"/>
-      <entry name="222222222222222"/>
-    </devices>
+    <devices/>
     <users>
       <entry name="admin">
         <phash>*</phash>
@@ -15,13 +12,13 @@
         </permissions>
       </entry>
       <entry name="pandemo">
-        <public-key>c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFEUjhKcENzL1EvSWJaa05hcDJISFFUYUw5c2M0emxsNVdYNHoyeW5LOUowN1RsL29wM2Uyb0d1eWlQeUJicW1MQ3ZWb0dJTXIzWjBMN0VBbXAyaDMzYm9HZGdlbkE4Rno1Um1tQ20yZUpubXNOWVVwWG1vdDZrTFNFc01kYU5TajRYaFN6VTkxWXlNNlZrd3lhL1BHQmN0V2pGTlNBUFArQlltYjBsTG1weHEyZEpNcGlsYnFZWjVMdVkzWnZVZmRZT25VdmRyK05CcGRqNmdOTlhhaXBCcCttazVtcjhvNlV3THlTMjI1UG1aQ1VQYm1FZ2ZWbG9LMVZpeHhrdDJSVVhFZ0l4bWVMeTZPTE54bzJtdkVzeXFMNnhiRmFQRlROTUVoU2EwcUN3VGdxQ0pHamtSdXhZdUZvNVBhRGhWNFV1S0s3a0xtRlk0dlhJSWNwL2pwNmoK</public-key>
+        <public-key></public-key>
         <permissions>
           <role-based>
             <superuser>yes</superuser>
           </role-based>
         </permissions>
-        <phash>$1$rpfbywac$DeEoIY5lPJy8lK8RRyi1g0</phash>
+        <phash>$1$cpkchdvw$1jwudA7rWj3NbyGFBxWyU1</phash>
       </entry>
       <entry name="__azure">
         <phash>$1$hbntblrc$mGPKfMj/gcahms8cMwyTY0</phash>
@@ -76,7 +73,7 @@
               <accept-dhcp-domain>no</accept-dhcp-domain>
             </dhcp-client>
           </type>
-          <hostname>panoramasampleconfig</hostname>
+          <hostname>PanoramaSample</hostname>
         </system>
         <setting>
           <management>
@@ -93,9 +90,9 @@
                   <accept-dhcp-domain>no</accept-dhcp-domain>
                 </dhcp-client>
               </type>
-              <hostname>panoramasampleconfig</hostname>
+              <hostname>jppanormaAWS21</hostname>
               <username>pandemo</username>
-              <public-key>c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFEUjhKcENzL1EvSWJaa05hcDJISFFUYUw5c2M0emxsNVdYNHoyeW5LOUowN1RsL29wM2Uyb0d1eWlQeUJicW1MQ3ZWb0dJTXIzWjBMN0VBbXAyaDMzYm9HZGdlbkE4Rno1Um1tQ20yZUpubXNOWVVwWG1vdDZrTFNFc01kYU5TajRYaFN6VTkxWXlNNlZrd3lhL1BHQmN0V2pGTlNBUFArQlltYjBsTG1weHEyZEpNcGlsYnFZWjVMdVkzWnZVZmRZT25VdmRyK05CcGRqNmdOTlhhaXBCcCttazVtcjhvNlV3THlTMjI1UG1aQ1VQYm1FZ2ZWbG9LMVZpeHhrdDJSVVhFZ0l4bWVMeTZPTE54bzJtdkVzeXFMNnhiRmFQRlROTUVoU2EwcUN3VGdxQ0pHamtSdXhZdUZvNVBhRGhWNFV1S0s3a0xtRlk0dlhJSWNwL2pwNmoK</public-key>
+              <public-key></public-key>
             </initcfg>
           </management>
         </setting>
@@ -293,13 +290,7 @@
       </template>
       <device-group>
         <entry name="Azure-dgspoke">
-          <devices>
-            <entry name="222222222222222">
-              <vsys>
-                <entry name="vsys1"/>
-              </vsys>
-            </entry>
-          </devices>
+          <devices/>
           <pre-rulebase>
             <nat>
               <rules>
@@ -445,13 +436,7 @@
           </log-settings>
         </entry>
         <entry name="Azure-dghub">
-          <devices>
-            <entry name="111111111111111">
-              <vsys>
-                <entry name="vsys1"/>
-              </vsys>
-            </entry>
-          </devices>
+          <devices/>
           <pre-rulebase>
             <nat>
               <rules>
@@ -617,11 +602,7 @@
                 </network>
                 <deviceconfig>
                   <setting>
-                    <azure-advanced-metrics>
-                      <enable>yes</enable>
-                      <instrumentation-key></instrumentation-key>
-                      <update-interval>1</update-interval>
-                    </azure-advanced-metrics>
+                    <azure-advanced-metrics/>
                   </setting>
                 </deviceconfig>
               </entry>
@@ -646,9 +627,7 @@
               </log-settings>
             </shared>
           </config>
-          <devices>
-            <entry name="222222222222222"/>
-          </devices>
+          <devices/>
         </entry>
         <entry name="Azure-tmplhub">
           <settings>
@@ -689,26 +668,7 @@
                       <routing-table>
                         <ip>
                           <static-route>
-                            <entry name="Default Route">
-                              <nexthop>
-                                <ip-address>172.16.1.1</ip-address>
-                              </nexthop>
-                              <bfd>
-                                <profile>None</profile>
-                              </bfd>
-                              <path-monitor>
-                                <enable>no</enable>
-                                <failure-condition>any</failure-condition>
-                                <hold-time>2</hold-time>
-                              </path-monitor>
-                              <interface>ethernet1/1</interface>
-                              <metric>10</metric>
-                              <destination>0.0.0.0/0</destination>
-                              <route-table>
-                                <unicast/>
-                              </route-table>
-                            </entry>
-                            <entry name="To-App">
+                            <entry name="to-App">
                               <nexthop>
                                 <ip-address>172.16.2.1</ip-address>
                               </nexthop>
@@ -727,37 +687,21 @@
                                 <unicast/>
                               </route-table>
                             </entry>
-                            <entry name="Probe">
-                              <path-monitor>
-                                <enable>no</enable>
-                                <failure-condition>any</failure-condition>
-                                <hold-time>2</hold-time>
-                              </path-monitor>
-                              <nexthop>
-                                <ip-address>172.16.2.4</ip-address>
-                              </nexthop>
-                              <bfd>
-                                <profile>None</profile>
-                              </bfd>
-                              <interface>ethernet1/2</interface>
-                              <metric>10</metric>
-                              <destination>168.63.129.16/32</destination>
-                              <route-table>
-                                <unicast/>
-                              </route-table>
-                            </entry>
                           </static-route>
                         </ip>
                       </routing-table>
                     </entry>
                   </virtual-router>
                 </network>
+                <deviceconfig>
+                  <setting>
+                    <azure-advanced-metrics/>
+                  </setting>
+                </deviceconfig>
               </entry>
             </devices>
           </config>
-          <devices>
-            <entry name="111111111111111"/>
-          </devices>
+          <devices/>
         </entry>
       </template-stack>
       <plugins>
@@ -773,10 +717,16 @@
           <autoscaling>
             <entry name="Autoscale1">
               <firewall-resource-group>
-                <entry name="jpinbound">
+                <entry name="jpasinboundrg1">
                   <resource-group-type>inbound</resource-group-type>
                   <device-group>Azure-dgspoke</device-group>
                   <template-stack>Azure-tmplspoke</template-stack>
+                  <auto-program-routes>yes</auto-program-routes>
+                </entry>
+                <entry name="jpashubrg1">
+                  <resource-group-type>hub</resource-group-type>
+                  <device-group>Azure-dghub</device-group>
+                  <template-stack>Azure-tmplhub</template-stack>
                   <auto-program-routes>yes</auto-program-routes>
                 </entry>
               </firewall-resource-group>
@@ -791,7 +741,7 @@
     </entry>
   </devices>
   <readonly>
-    <max-internal-id>31</max-internal-id>
+    <max-internal-id>34</max-internal-id>
     <devices>
       <entry name="localhost.localdomain">
         <template>
@@ -876,6 +826,15 @@
                   </entry>
                   <entry name="jpinbound">
                     <id>26</id>
+                  </entry>
+                  <entry name="jpasinboundrg">
+                    <id>32</id>
+                  </entry>
+                  <entry name="jpasinboundrg1">
+                    <id>33</id>
+                  </entry>
+                  <entry name="jpashubrg1">
+                    <id>34</id>
                   </entry>
                 </firewall-resource-group>
               </entry>
