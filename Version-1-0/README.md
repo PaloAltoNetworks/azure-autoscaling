@@ -12,9 +12,9 @@ independently scaling the VM-Series firewalls with the changing workloads.
 ![alt text](/Version-1-0/arm_scale2-1.PNG?raw=true "Topology for the Auto Scaling VM-Series Firewalls on Azure Version 1.0")
 
 # Requirements  
-***Please speak to your Palo Alto Networks resource for access to the Panorama 2.0 plugin.***   
+***Please speak to your Palo Alto Networks resource for access to the Panorama 2.0 plugin(Beta).***   
 - A Panorama virtual or physical appliance. No higher than PAN-OS 8.1.6 for Panorama is recommended.  
-- Panorama Plugin v2.0   
+- Panorama Plugin v2.0(Beta)   
 - A working Azure Service Principal.
 For information on setting up an Azure Service Princial [CLICK HERE](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) 
 
