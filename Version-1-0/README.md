@@ -37,10 +37,14 @@ user: pandemo pwd: Dem0pa$$w0rd
 **Training Videos**   
 - Intro 	***6:49***  [CLICK HERE](
 https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_1_Intro.mp4)  
-- Infra 	4:44  
-- Inbound 	13:04  
-- Hub 		5:24  
-- App		9:21   
+- Infra 	***4:44***  [CLICK HERE](
+https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_2_Infra.mp4)    
+- Inbound 	***13:04***  [CLICK HERE](
+https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_3_Inbound.mp4)    
+- Hub 		***5:24***  [CLICK HERE](
+https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_4_Hub.mp4)    
+- App		***9:21***  [CLICK HERE](
+https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_5_App.mp4) 
 
 
 
