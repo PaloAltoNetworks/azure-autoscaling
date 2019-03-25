@@ -34,6 +34,16 @@ user: pandemo pwd: Dem0pa$$w0rd
 - ***Be sure to configure health probes for the Load Balancers in Panorama for the Hub and Inbound template.***     
 
 
+**Training Videos**   
+- Intro 	6:49  
+  [CLICK HERE] (https://github.com/PaloAltoNetworks/azure-autoscaling/raw/master/Version-1-0/videos/AutoScale1-0_1_Intro.mp4)  
+- Infra 	4:44  
+- Inbound 	13:04  
+- Hub 		5:24  
+- App		9:21   
+
+
+
 # Deploy Buttons   
 
 ***Infra Deployment***   
