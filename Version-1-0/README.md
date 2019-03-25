@@ -31,7 +31,7 @@ user: pandemo pwd: Dem0pa$$w0rd
 - No higher than PAN-OS 8.1.6 for Panorama is recommended  
 - If Hub is deployed last you must manually peer the hub with the app template  
 - Because we use VNet Peering be sure none of your virtual network subnets overlap  
-- ***Be sure to configure health probes for the Load Balancers in Panorama for the Hub and Inbound template. See my Panorama Sample config***   
+- ***Be sure to configure health probes for the Load Balancers in Panorama for the Hub and Inbound template.***     
 
 
 # Deploy Buttons   
