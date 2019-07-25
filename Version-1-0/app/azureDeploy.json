@@ -36,9 +36,8 @@
         "applicationLoadBalancerIP": {
             "type": "string",
             "metadata": {
-                "description": "IP Address of the Load Balancer frontending the app. Use an IP address from the trusted subnet range below."
-            },
-            "defaultValue": "10.0.1.4"
+                "description": "IP Address of the Load Balancer frontending the app."
+            }
         },
         "inboundFirewallResourceGroupName": {
             "type": "string",
@@ -77,7 +76,7 @@
             "type": "string",
             "defaultValue": "10.0.1.0/24",
             "metadata": {
-                "description": "CIDR for ILB VIP Network"
+                "description": "CIDR for Trusted Network"
             }
         },
         "backendSubnetPrefix": {

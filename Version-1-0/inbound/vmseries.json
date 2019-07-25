@@ -16,9 +16,17 @@
                 "Standard_D4",
                 "Standard_D3_v2",
                 "Standard_D4_v2",
-                "Standard_A4",
+                "Standard_D5_v2",
+                "Standard_D3_v3",
+                "Standard_D4_v3",
+                "Standard_D16_v3",
                 "Standard_DS3_v2",
-                "Standard_DS4_v2"
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS3_v3",
+                "Standard_DS4_v3",
+                "Standard_DS16_v3",
+                "Standard_A4" 
             ],
             "metadata": {
                 "description": "Azure VM size for VM-Series"
@@ -27,7 +35,7 @@
         },
         "vmScaleSetMinCount": {
             "type": "int",
-            "defaultValue": 1, 
+            "defaultValue": 2, 
             "metadata": {
                 "description": "The minimum (and default) number of FWs that will be deployed into the VM Scale Set."
             }
@@ -142,14 +150,14 @@
         },
         "scaleInThreshold": {
             "type": "int",
-            "defaultValue": 20,
+            "defaultValue": 2000,
             "metadata": {
                 "description": "The Threshold below which FW VM scale in kicks in."
             }
         },
         "scaleOutThreshold": {
             "type": "int",
-            "defaultValue": 80,
+            "defaultValue": 32000,
             "metadata": {
                 "description": "The Threshold above which FW VM scale out kicks in."
             }
@@ -159,11 +167,15 @@
             "metadata":{
               "description": "Azure Function handler launched as part of the Service Bus template which handles VM licensing."
             }
+        },
+        "guidValue": {
+            "type": "string",
+            "defaultValue": "[newGuid()]"
         }
     },
     "variables": {
         "rgname": "[resourceGroup().id]",
-        "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+        "namingInfix": "[substring(uniqueString(parameters('guidValue')), 0, 5)]",
         "autoscaleName": "[concat('autoscale', variables('namingInfix'))]",
         "nicNameMgmt": "[concat('nicmgmt', variables('namingInfix'))]",
         "nicNameUntrust": "[concat('nicuntrust', variables('namingInfix'))]",
@@ -252,7 +264,7 @@
                         }
                     },
                     "osProfile": {
-                        "computerNamePrefix": "[variables('namingInfix')]",
+                        "computerNamePrefix": "[concat('pavm', variables('namingInfix'))]",
                         "adminUsername": "[parameters('adminUsername')]",
                         "adminPassword": "[parameters('adminPassword')]",
                         "customData": "[base64(parameters('customDataField'))]"

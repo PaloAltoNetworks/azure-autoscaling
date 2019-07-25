@@ -71,7 +71,10 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[resourceGroup().location]",
             "properties": {
-                "publicIPAllocationMethod": "Dynamic"
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('publicIPAddressName')]"
+                }
             }
         },
         {

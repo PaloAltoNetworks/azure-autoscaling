@@ -72,7 +72,7 @@
 	},
 	{
         "type": "Microsoft.Network/networkSecurityGroups",
-		"name": "[concat(parameters('nsgName'), '-trust')]",
+		"name": "[concat(parameters('nsgName'), '-untrust')]",
         "apiVersion": "2017-06-01",
         "location": "[parameters('location')]",
         "properties": {
@@ -210,5 +210,13 @@
         }
 	],
 	"outputs": {
+        "MgmtSubnetNsgName": {
+            "value": "[concat(parameters('nsgName'), '-mgmt')]",
+            "type": "string"
+        },
+        "UntrustSubnetNsgName": {
+            "value": "[concat(parameters('nsgName'), '-untrust')]",
+            "type": "string"
+        }
 	}
 }

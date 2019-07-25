@@ -1,0 +1,64 @@
+Change 845887 by rramalinga@rramalinga-hqna2 on 2019/03/13 23:56:15
+
+	   PLUG-1637 - Azure Plugin: Delete the Public IP in the InboundFW and HUB FW Templates
+	
+	   Removing the public ip for mmgmt interface
+
+Affected files ...
+
+... //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/hub/azureDeploy.json#4 edit
+... //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/hub/vmseries.json#3 edit
+... //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/azureDeploy.json#5 edit
+... //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/deployPublicIP.json#2 edit
+... //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/vmseries.json#3 edit
+
+Differences ...
+
+==== //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/hub/azureDeploy.json#4 (text) ====
+
+14c14
+<             "defaultValue": "10.0.0.0/16",
+---
+>             "defaultValue": "172.16.0.0/16",
+21c21
+<             "defaultValue": "10.0.0.0/24",
+---
+>             "defaultValue": "172.16.0.0/24",
+28c28
+<             "defaultValue": "10.0.1.0/24",
+---
+>             "defaultValue": "172.16.1.0/24",
+35c35
+<             "defaultValue": "10.0.2.0/24",
+---
+>             "defaultValue": "172.16.2.0/24",
+45c45
+<             "defaultValue": "10.0.2.4"
+---
+>             "defaultValue": "172.16.2.4"
+
+==== //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/hub/vmseries.json#3 (text) ====
+
+272,277d271
+<                                         },
+<                                         "publicIPAddressConfiguration": {
+<                                             "name": "pavm_pip",
+<                                             "properties": {
+<                                                 "idleTimeoutInMinutes": 15
+<                                             }
+
+==== //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/azureDeploy.json#5 (text) ====
+
+
+==== //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/deployPublicIP.json#2 (text) ====
+
+
+==== //depot/plugins/azure/devel/azursci/src/scripts/azure_templates/inbound/vmseries.json#3 (text) ====
+
+272,277d271
+<                                         },
+<                                         "publicIPAddressConfiguration": {
+<                                             "name": "pavm_pip",
+<                                             "properties": {
+<                                                 "idleTimeoutInMinutes": 15
+<                                             }
