@@ -1,5 +1,5 @@
 #!/bin/bash
-VER=1.0.0-beta
+VER=1.0.0-6.dev
 BNAME="azure-autoscaling"
 # clean up
 rm -fr $BNAME.$VER.zip $BNAME-$VER.md5sum.txt

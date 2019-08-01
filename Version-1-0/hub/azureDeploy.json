@@ -2,6 +2,17 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "deployIntoExistingVnet": {
+             "type": "string",
+             "defaultValue": "No",
+             "allowedValues": [
+                    "Yes",
+                    "No"
+             ],
+             "metadata": {
+                 "description": "If yes, then the template will deploy just the VM-Series firewall and not the app-gw."
+             }
+        },
         "virtualNetworkName": {
             "type": "string",
             "defaultValue": "hub-vnet",
@@ -81,8 +92,16 @@
                 "Standard_D3_v2",
                 "Standard_D4_v2",
                 "Standard_D5_v2",
-                "Standard_D14_v2",
-                "Standard_A4"
+                "Standard_D3_v3",
+                "Standard_D4_v3",
+                "Standard_D16_v3",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS3_v3",
+                "Standard_DS4_v3",
+                "Standard_DS16_v3",
+                "Standard_A4" 
             ],
             "metadata": {
                 "description": "Azure VM size for VM-Series"
@@ -96,30 +115,11 @@
                 "description": "The username for the administrator account on the VM-Series firewall."
             }
         },
-        "authenticationType": {
-            "type": "string",
-            "metadata": {
-                "description": "The authentication method for the administrator account."
-            },
-            "allowedValues": [
-                "sshPublicKey",
-                "password"
-            ],
-            "defaultValue": "password"
-        },
- 
         "password": {
             "type": "securestring",
             "defaultValue": "Dem0pa$$w0rd",
             "metadata": {
                 "description": "The password for the administrator account. Required if Authentication Type is 'password'. Visit https://docs.microsoft.com/en-us/azure/virtual-machines/windows/faq#what-are-the-password-requirements-when-creating-a-vm for password requirements"
-            }
-        },
-        "sshPublicKey": {
-            "type": "string",
-            "defaultValue": " ",
-            "metadata": {
-                "description": "The SSH RSA public key file as a string. Required if Authentication Type is 'sshPublicKey'."
             }
         },
 		"bootstrapStorageAccount": {
@@ -151,7 +151,7 @@
 		},
         "vmScaleSetMinCount": {
             "type": "int",
-            "defaultValue": 1,
+            "defaultValue": 2,
             "metadata": {
                 "description": "The minimum (and default) number of VM-Series firewall(s) to deploy in the VM Scale Set."
             }
@@ -182,14 +182,14 @@
  
         "scaleInThreshold": {
             "type": "int",
-            "defaultValue": 20,
+            "defaultValue": 2000,
             "metadata": {
                 "description": "The threshold below which the VM-Series firewall is scaled in."
             }
         },
         "scaleOutThreshold": {
             "type": "int",
-            "defaultValue": 80,
+            "defaultValue": 32000,
             "metadata": {
                 "description": "The threshold above which the VM-Series firewall is scaled out."
             }
@@ -325,7 +325,7 @@
                 },
                 "parameters": {
                     "nsgName": {
-                        "value": "[variables('networkSecurityGroupName')]"
+                        "value": "[reference('deployNsg').outputs.MgmtSubnetNsgName.value]"
                     },
                     "virtualNetworkName": {
                         "value": "[parameters('virtualNetworkName')]"
@@ -350,6 +350,9 @@
                     },
                     "trustSubnetPrefix": {
                         "value": "[parameters('trustSubnetPrefix')]"
+                    },
+                    "deployIntoExistingVnet": {
+                        "value": "[parameters('deployIntoExistingVnet')]"
                     }
                 }
             }
@@ -425,6 +428,9 @@
                     "vmSku": {
                          "value": "[parameters('firewallModel')]"
                     },
+                    "imageVersion": { 
+                        "value": "[parameters('imageVersion')]"
+                    },
                     "adminUsername": {
                          "value": "[parameters('username')]"
                     },
@@ -471,5 +477,27 @@
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+        "HubFwVnetName": {
+            "value": "[parameters('virtualNetworkName')]",
+            "type": "string"
+        },
+        "HubFwMgmtSubnetName": {
+            "value": "[variables('MgmtSubnetName')]",
+            "type": "string"
+        },
+        "HubFwUntrustSubnetName": {
+            "value": "[variables('untrustedSubnetName')]",
+            "type": "string"
+        },
+        "HubFwTrustSubnetName": {
+            "value": "[variables('trustedSubnetName')]",
+            "type": "string"
+        },
+        "HubFwLoadBalancerIP": {
+            "value": "[parameters('loadBalancerIP')]",
+            "type": "string"
+        }
+
+    }
 }

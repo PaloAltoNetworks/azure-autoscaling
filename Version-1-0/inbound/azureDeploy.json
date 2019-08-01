@@ -1,12 +1,14 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
+
     "parameters": {
         "appGatewayDnsName": {
             "type": "string",
             "metadata": {
-                "description": "The DNS name for the internet-facing application. Must be globally unique."
-            }
+                "description": "The DNS name for the internet-facing application. Must be globally unique. - Required if deploying into new VNET, Not applicable if deploying into existing VNET."
+            },
+            "defaultValue": "YourAppGwDnsName"
         },
         "networkSecurityGroupInboundSrcIP": {
             "type": "string",
@@ -16,10 +18,20 @@
         },
         "fwLoadBalancerIP": {
             "type": "string",
-            "defaultValue": "192.168.1.10",
             "metadata": {
                 "description": "IP Address of the Internal Load Balancer in front of the firewall. This should be an IP in the Untrust subnet."
             }
+        },
+        "deployIntoExistingVnet": {
+             "type": "string",
+             "defaultValue": "No",
+             "allowedValues": [
+                    "Yes",
+                    "No"
+             ],
+             "metadata": {
+                 "description": "If yes, then the template will deploy just the VM-Series firewall and not the app-gw."
+             }
         },
         "virtualNetworkName": {
             "type": "string",
@@ -89,13 +101,21 @@
         "vmSeriesFirewallVmSize": {
              "type": "string",
              "allowedValues": [
-                    "Standard_D3",
-                    "Standard_D4",
-                    "Standard_D3_v2",
-                    "Standard_D4_v2",
-                    "Standard_D5_v2",
-                    "Standard_D14_v2",
-                    "Standard_A4"
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_D5_v2",
+                "Standard_D3_v3",
+                "Standard_D4_v3",
+                "Standard_D16_v3",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2",
+                "Standard_DS5_v2",
+                "Standard_DS3_v3",
+                "Standard_DS4_v3",
+                "Standard_DS16_v3",
+                "Standard_A4" 
              ],
              "metadata": {
                 "description": "Azure VM size for VM-Series firewall."
@@ -109,29 +129,11 @@
                 "description": "The username for the administrator account on the VM-Series firewall."
             }
         },
-        "authenticationType": {
-            "type": "string",
-            "metadata": {
-                "description": "The authentication method for the administrator account."
-            },
-            "allowedValues": [
-                "sshPublicKey",
-                "password"
-            ],
-            "defaultValue": "password"
-        },
         "password": {
             "type": "securestring",
             "defaultValue": "Dem0pa$$w0rd",
             "metadata": {
                 "description": "The password for the administrator account. Required if Authentication Type is 'password'. Visit https://docs.microsoft.com/en-us/azure/virtual-machines/windows/faq#what-are-the-password-requirements-when-creating-a-vm for password requirements"
-            }
-        },
-        "sshPublicKey": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "The SSH RSA public key file as a string. Required if Authentication Type is 'sshPublicKey'."
             }
         },
         "bootstrapStorageAccount": {
@@ -161,7 +163,7 @@
         },
         "vmScaleSetMinCount": {
             "type": "int",
-            "defaultValue": 1,
+            "defaultValue": 2,
             "metadata": {
                 "description": "The minimum (and default) number of VM-Series firewall(s) to deploy in the VM Scale Set."
             }
@@ -191,14 +193,14 @@
         },
         "scaleInThreshold": {
             "type": "int",
-            "defaultValue": 20,
+            "defaultValue": 2000,
             "metadata": {
                 "description": "The threshold below which the VM-Series firewall is scaled in."
             }
         },
         "scaleOutThreshold": {
             "type": "int",
-            "defaultValue": 80,
+            "defaultValue": 32000,
             "metadata": {
                 "description": "The threshold above which the VM-Series firewall is scaled out."
             }
@@ -326,6 +328,7 @@
             }
         },
         {
+            "condition": "[equals(parameters('deployIntoExistingVnet'), 'No')]",
             "name": "SetupDefaultUDR",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
@@ -395,11 +398,14 @@
                     },
                     "udrName": {
                          "value": "[variables('udrName')]"
+                    },
+                    "deployIntoExistingVnet": {
+                        "value": "[parameters('deployIntoExistingVnet')]"
                     }
                 }
             }
         },
-        {
+        {   "condition": "[equals(parameters('deployIntoExistingVnet'), 'No')]",
             "name": "SetupPublicLoadBalancer",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
@@ -583,5 +589,25 @@
            }
         ],
     "outputs": {
+        "InboundFwVnetName": {
+            "value": "[parameters('virtualNetworkName')]",
+            "type": "string"
+        },
+        "InboundFwMgmtSubnetName": {
+            "value": "[variables('MgmtSubnetName')]",
+            "type": "string"
+        },
+        "InboundFwUntrustSubnetName": {
+            "value": "[variables('untrustedSubnetName')]",
+            "type": "string"
+        },
+        "InboundFwTrustSubnetName": {
+            "value": "[variables('trustedSubnetName')]",
+            "type": "string"
+        },
+        "InboundFwLoadBalancerIP": {
+            "value": "[parameters('fwLoadBalancerIP')]",
+            "type": "string"
+        }
     }
 }

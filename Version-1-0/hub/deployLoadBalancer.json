@@ -110,8 +110,7 @@
 							"frontendPort": "[if(equals(parameters('loadBalancerSku'), 'Standard'), 0, 80)]",
 							"backendPort": "[if(equals(parameters('loadBalancerSku'), 'Standard'), 0, 80)]",
 							"enableFloatingIP": false,
-							"idleTimeoutInMinutes": 4,
-							"loadDistribution": "SourceIPProtocol"
+							"idleTimeoutInMinutes": 4
 						},
 						"Name": "lbrule"
 					}
@@ -120,7 +119,7 @@
 					{
 						"properties": {
 							"protocol": "Tcp",
-							"port": 22,
+							"port": 80,
 							"intervalInSeconds": 15,
 							"numberOfProbes": 2
 						},
