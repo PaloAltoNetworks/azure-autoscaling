@@ -20,7 +20,7 @@ For information on setting up an Azure Service Princial [CLICK HERE](https://doc
 
 # Deployment Guide    
 The deployment guide can be found 
-[HERE](https://github.com/PaloAltoNetworks/azure-autoscaling/tree/master/Version-1-0/Auto_Scaling_VM-Series_Firewalls_on_Azure.pdf)  
+[HERE](https://docs.paloaltonetworks.com/vm-series/9-0/vm-series-deployment/set-up-the-vm-series-firewall-on-azure/autoscaling-the-vm-series-firewall-on-azure.html#)  
 
 **Panorama Config File**   
 a sample Panorama configuration file has been included in this GitHub repository   
