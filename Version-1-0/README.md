@@ -29,7 +29,7 @@ user: pandemo pwd: Dem0pa$$w0rd
 
 **Gotchas**  
 - Be sure you place the Virtual Router in the Template Stack NOT the template   
-- No higher than PAN-OS 8.1.6 for Panorama is recommended  
+- Minimum of PAN-OS 8.1.8 for Panorama is required  
 - If Hub is deployed last you must manually peer the hub with the app template  
 - Because we use VNet Peering be sure none of your virtual network subnets overlap  
 - ***Be sure to configure health probes for the Load Balancers in Panorama for the Hub and Inbound template.***     
