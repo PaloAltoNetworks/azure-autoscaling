@@ -1,0 +1,27 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "udrName": {
+            "type":"string",
+            "defaultValue": "emptyUDR",
+            "metadata": {
+                "description": "Empty UDR Rule"
+            }
+        }
+    },
+    "variables": {
+      "location": "[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('udrName')]",
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2018-08-01",
+            "location": "[variables('location')]",
+            "dependsOn": [],
+            "properties": {
+            }
+        }
+    ]
+}

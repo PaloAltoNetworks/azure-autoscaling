@@ -1,0 +1,122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "nsgName": {
+            "type": "string",
+            "defaultValue": "nsg-default1"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "defaultValue": "app-vnet-FW",
+            "metadata": {
+                "description": "App VNET name"
+            }
+        },
+        "virtualNetworkAddressPrefix": {
+            "type": "string",
+            "defaultValue": "192.168.0.0/16",
+            "metadata": {
+                "description": "CIDR for vnet"
+            }
+        },
+        "subnetLBName": {
+            "type": "string",
+            "defaultValue": "UntrustLB",
+            "metadata": {
+                "description": "Subnet for App Gateway"
+            }
+        },
+        "subnetWWWName": {
+            "type": "string",
+            "defaultValue": "backendSubnet",
+            "metadata": {
+                "description": "Subnet for backend WWW"
+            }
+        },
+        "subnetLBPrefix": {
+            "type": "string",
+            "defaultValue": "None",
+            "metadata": {
+                "description": "App Gateway CIDR"
+            }
+        },
+        "subnetWWWPrefix": {
+            "type": "string",
+            "defaultValue": "None",
+            "metadata": {
+                "description": "backend WWW CIDR"
+            }
+        },
+        "connectToHub": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "metadata": {
+                "description": "Select Yes, if you want the outbound traffic to be protected by a hub firewall."
+            },
+            "defaultValue": "No"
+        },
+        "udrName": {
+            "type": "string",
+            "defaultValue": "defaultBackendUDR",
+            "metadata": {
+                "description": "UDR to attach to the app backend"
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "rgname": "[resourceGroup().id]",
+        "vnetname": "[parameters('virtualNetworkName')]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetname'))]",
+        "subnetLBRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetLBName'))]",
+        "subnetWWWRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetWWWName'))]",
+        "vnetnameHub": "[concat(parameters('virtualNetworkName'), '-hub')]",
+
+        "subnets": [
+            {
+                "name": "[parameters('subnetLBName')]",
+                "properties": {
+                    "addressPrefix": "[parameters('subnetLBPrefix')]"
+                }
+            },
+            {
+                "name": "[parameters('subnetWWWName')]",
+                "properties": {
+                    "addressPrefix": "[parameters('subnetWWWPrefix')]",
+                    "routeTable": {
+                        "id": "[resourceId('Microsoft.Network/routeTables', parameters('udrName'))]"
+                    }
+                }
+            }
+        ]
+    },
+    "resources": [
+        {
+            "name": "[variables('vnetname')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "location": "[variables('location')]",
+            "apiVersion": "2015-06-15",
+            "tags": {
+                    "PanoramaManaged": "yes"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('virtualNetworkAddressPrefix')]"
+                    ]
+                },
+                "subnets": "[variables('subnets')]"
+            }
+        }
+    ],
+    "outputs": {
+        "vnetName": {
+            "value": "[variables('vnetname')]",
+            "type": "string"
+        }
+    }
+}

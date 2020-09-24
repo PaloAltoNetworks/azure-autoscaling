@@ -1,0 +1,176 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"nsgName": {
+			"type": "string",
+			"defaultValue": "nsg-default1"
+		},
+		"virtualNetworkName": {
+			"type": "string",
+			"defaultValue": "vnet",
+			"metadata": {
+				"description": "VNET name"
+			}
+		},
+		"virtualNetworkAddressPrefix": {
+			"type": "string",
+			"defaultValue": "192.168.0.0/16",
+			"metadata": {
+				"description": "CIDR for vnet"
+			}
+		},
+		"mgmtSubnetName": {
+			"type": "string",
+			"defaultValue": "Mgmt",
+			"metadata": {
+				"description": "Subnet for Management"
+			}
+		},
+		"untrustSubnetName": {
+			"type": "string",
+			"defaultValue": "Untrust",
+			"metadata": {
+				"description": "Subnet for Untrust"
+			}
+		},
+		"trustSubnetName": {
+			"type": "string",
+			"defaultValue": "Trust",
+			"metadata": {
+				"description": "Subnet for Trust"
+			}
+		},
+		"mgmtSubnetPrefix": {
+			"type": "string",
+			"defaultValue": "192.168.0.0/24",
+			"metadata": {
+				"description": "Mgmt subnet CIDR"
+			}
+		},
+		"untrustSubnetPrefix": {
+			"type": "string",
+			"defaultValue": "192.168.1.0/24",
+			"metadata": {
+				"description": "Untrust subnet CIDR"
+			}
+		},
+		"trustSubnetPrefix": {
+			"type": "string",
+			"defaultValue": "192.168.2.0/24",
+			"metadata": {
+				"description": "Trust subnet CIDR"
+			}
+		},
+        "deployIntoExistingVnet": {
+             "type": "string",
+             "defaultValue": "No",
+             "allowedValues": [
+                    "Yes",
+                    "No"
+             ],
+             "metadata": {
+                 "description": "If yes, then the template will deploy just the VM-Series firewall and not the app-gw."
+             }
+        }
+
+	},
+	"variables": {
+		"location"         : "[resourceGroup().location]",
+		"rgname"           : "[resourceGroup().id]",
+		"vnetname"         : "[parameters('virtualNetworkName')]",
+		"vnetID"           : "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetname'))]",
+		"mgmtSubnetRef"    : "[concat(variables('vnetID'),'/subnets/',parameters('mgmtSubnetName'))]",
+		"untrustSubnetRef" : "[concat(variables('vnetID'),'/subnets/',parameters('untrustSubnetName'))]",
+		"trustSubnetRef"   : "[concat(variables('vnetID'),'/subnets/',parameters('trustSubnetName'))]",
+		"subnets": [
+			{
+				"name": "[parameters('mgmtSubnetName')]",
+				"properties": {
+					"addressPrefix": "[parameters('mgmtSubnetPrefix')]",
+					"networkSecurityGroup": {
+						"id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+					}
+				}
+			},
+			{
+				"name": "[parameters('untrustSubnetName')]",
+				"properties": {
+					"addressPrefix": "[parameters('untrustSubnetPrefix')]"
+				}
+			},
+			{
+				"name": "[parameters('trustSubnetName')]",
+				"properties": {
+					"addressPrefix": "[parameters('trustSubnetPrefix')]"
+				}
+			}
+		]
+	},
+	"resources": [
+		{
+            "condition": "[equals(parameters('deployIntoExistingVnet'), 'No')]",
+			"name": "[variables('vnetname')]",
+			"type": "Microsoft.Network/virtualNetworks",
+			"location": "[variables('location')]",
+			"apiVersion": "2015-06-15",
+            "tags": {
+                "PanoramaManaged": "Yes"
+            },
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": [
+						"[parameters('virtualNetworkAddressPrefix')]"
+					]
+				},
+				"subnets": "[variables('subnets')]"
+			}
+		},
+        {
+            "condition": "[equals(parameters('deployIntoExistingVnet'), 'Yes')]",
+            "apiVersion": "2018-04-01",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(variables('vnetname'), '/', parameters('mgmtSubnetName'))]",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressPrefix": "[if(equals(parameters('mgmtSubnetPrefix'), 'None'), json('null'), parameters('mgmtSubnetPrefix'))]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                }
+            }
+        },
+        {
+            "condition": "[equals(parameters('deployIntoExistingVnet'), 'Yes')]",
+            "apiVersion": "2018-04-01",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(variables('vnetname'), '/', parameters('untrustSubnetName'))]",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressPrefix": "[if(equals(parameters('untrustSubnetPrefix'), 'None'), json('null'), parameters('untrustSubnetPrefix'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetname'), parameters('mgmtSubnetName'))]"
+            ]
+        },
+        {
+            "condition": "[equals(parameters('deployIntoExistingVnet'), 'Yes')]",
+            "apiVersion": "2018-04-01",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(variables('vnetname'), '/', parameters('trustSubnetName'))]",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressPrefix": "[if(equals(parameters('trustSubnetPrefix'), 'None'), json('null'), parameters('trustSubnetPrefix'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetname'), parameters('untrustSubnetName'))]"
+            ]
+        }
+
+	],
+	"outputs": {
+		"vnetName": {
+			"value": "[variables('vnetname')]",
+			"type": "string"
+		}
+	}
+}
