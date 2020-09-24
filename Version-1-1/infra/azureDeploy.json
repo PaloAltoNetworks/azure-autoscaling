@@ -1,0 +1,218 @@
+{
+    "$schema": "http://schemas.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "panoramaPluginMessageHandlerName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Azure Function that will pass messages to the Panorama plugin for Azure. The Azure function URL will begin with this name."
+            }
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS",
+                "Premium_LRS"
+            ],
+            "metadata": {
+                "description": "Storage Account type"
+            }
+        },
+        "repoURL": {
+            "type": "string",
+            "defaultValue": "https://github.com/PaloAltoNetworks/azure-autoscaling.git",
+            "metadata": {
+                "description": "The URL for the GitHub repository that hosts the Azure Function bits."
+            }
+        },
+        "branch": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The branch of the GitHub repository that hosts the version of the Azure Function."
+            }
+        },
+        "serviceBusName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Service Bus that the Panorama subscribes to receive notifications from Azure. The value must be between 6 and 50 characters long. The namespace can contain only letters, numbers, and hyphens. The namespace must start with a letter, and it must end with a letter or number.This name has to be globally unique."
+            }
+        }
+    },
+    "variables": {
+        "location" : "[resourceGroup().location]",
+        "functionAppName": "[parameters('panoramaPluginMessageHandlerName')]",
+        "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+        "hostingPlanName": "[concat(parameters('panoramaPluginMessageHandlerName'), '-plan')]",
+        "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
+        "RootManageSharedAccessKey_name": "RootManageSharedAccessKey",
+        "serviceBusApiVersion": "2014-09-01",
+        "baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/Version-1-0/infra",
+        "serviceBusUrl": "[concat(variables('baseUrl'), '/deployServiceBus.json')]",
+        "functionHostingPlan": "Basic",
+        "appInsightsInstancename": "[concat(parameters('panoramaPluginMessageHandlerName'), '-appinsights-', variables('namingInfix'))]",
+        "workerSize": "0"
+    },
+    "resources": [
+        {
+            "name": "SetupServiceBusNamespace",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-09-01",
+            "properties": { 
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('serviceBusUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "serviceBusNamespaceName": {
+                        "value": "[parameters('serviceBusName')]"
+                    },
+                    "serviceBusSku": {
+                        "value": "Standard"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "apiVersion": {
+                        "value": "[variables('serviceBusApiVersion')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[variables('location')]",
+            "properties": {
+                "accountType": "[parameters('storageAccountType')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2015-04-01",
+            "name": "[variables('hostingPlanName')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "name": "[variables('hostingPlanName')]",
+                "sku": "[variables('functionHostingPlan')]",
+                "workerSize": "[variables('workerSize')]",
+                "hostingEnvironment": "",
+                "numberOfWorkers": 1
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupServiceBusNamespace"
+            ]
+        },
+        {
+            "apiVersion": "2015-05-01",
+            "name": "[variables('appInsightsInstancename')]",
+            "type": "microsoft.insights/components",
+            "location": "[variables('locations')]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('panoramaPluginMessageHandlerName'))]": "Resource"
+            },
+            "properties": {
+                "ApplicationId": "[parameters('panoramaPluginMessageHandlerName')]",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('functionAppName')]",
+            "location": "[variables('location')]",
+            "kind": "functionapp",
+            "properties": {
+                "name": "[variables('functionAppName')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "hostingEnvironment": "",
+                "clientAffinityEnabled": false,
+                "siteConfig": {
+                    "alwaysOn": true,
+                    "cors": {
+                        "allowedOrigins": [
+                            "*"
+                        ]
+                    },
+                    "appSettings": [
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~1"
+                        },
+                        {
+                            "name": "Project",
+                            "value": "Version-1-0"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]"
+                        },
+                        {
+                            "name": "AzureWebJobsDashboard",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1)]"
+                        },
+                        {
+                            "name": "PanServiceBusConnectionString",
+                            "value": "[reference('SetupServiceBusNamespace').outputs.NamespaceDefaultConnectionString.value]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(toLower(parameters('panoramaPluginMessageHandlerName')), '887c')]"
+                        },
+                        {
+                            "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                            "value": "8.11.1"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsInstancename')), '2015-05-01').InstrumentationKey]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+                "[resourceId('microsoft.insights/components/', variables('appInsightsInstancename'))]"
+            ],
+            "resources": [
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('repoURL')]",
+                        "branch": "[parameters('branch')]",
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "ServiceBusName": {
+            "value": "[parameters('serviceBusName')]",
+            "type": "string"
+        },
+        "ServiceBusConnectionString": {
+            "value": "[reference('SetupServiceBusNamespace').outputs.NamespaceDefaultConnectionString.value]",
+            "type": "string"
+        },
+        "ServiceBusConnectionKey": {
+            "value": "[reference('SetupServiceBusNamespace').outputs.DefaultSharedAccessPolicyPrimaryKey.value]",
+            "type": "string"
+        }
+    }
+}

@@ -1,0 +1,387 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connectToHub": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "metadata": {
+                "description": "Select Yes, if you want the outbound traffic to be protected by a hub firewall."
+            }
+        },
+        "hubResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource group name of the Hub, if the app is going to be connected to a hub firewall"
+            },
+            "defaultValue": "hub-resource-group"
+        },
+        "hubVnetName": {
+            "type": "string",
+            "defaultValue": "hub-vnet",
+            "metadata": {
+                "description": "VN Name of the VNet where the hub resides, if the app is going to be connected to a hub firewall"
+            }
+        },
+        "hubLoadBalancerIP": {
+            "type": "string",
+            "metadata": {
+                "description": "IP Address of the outbound Load Balancer in the hub, if the app is going to be connected to a firewall."
+            },
+            "defaultValue": "172.16.2.4"
+        },
+        "applicationLoadBalancerIP": {
+            "type": "string",
+            "metadata": {
+                "description": "IP Address of the Load Balancer frontending the app."
+            }
+        },
+        "inboundFirewallResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource group name of the inbound firewall"
+            }
+        },
+        "inboundFirewallVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "VN Name of the VNet where the inbound firewall resides, if the app is going to be connected to a hub firewall"
+            }
+        },
+        "networkSecurityGroupInboundSrcIP": {
+            "type": "string",
+             "metadata": {
+                 "description": "Your source public IP address. Added to the inbound NSG on eth0 (MGMT), to restrict access to the deployment."
+             },
+             "defaultValue": "1.1.1.1/32"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "defaultValue": "spoke-app-vnet",
+            "metadata": {
+                "description": "Virtual Network Name of the backend application"
+            }
+        },
+        "virtualNetworkAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "CIDR for Virtual Network"
+            }
+        },
+        "trustedSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "CIDR for Trusted Network"
+            }
+        },
+        "backendSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.2.0/24",
+            "metadata": {
+                "description": "CIDR for Backend WWW Network"
+            }
+        },
+        "username": {
+            "type": "string",
+            "defaultValue": "pandemo",
+            "metadata": {
+                "description": "Username of the administrator account of VM instances"
+            }
+        },
+        "password": {
+            "type": "securestring",
+            "defaultValue": "Dem0pa$$w0rd",
+            "metadata": {
+                "description": "Password for the administrator account of all VM instances. Must be specified if Authentication Type is 'password'."
+            }
+        }
+    },
+    "variables": {
+        "location" : "[resourceGroup().location]",
+        "namingInfix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+        "rgname" : "[resourceGroup().name]",
+        "storageAccountName": "[concat('storageacct', variables('namingInfix'))]",
+        "storageAccountType": "Standard_LRS",
+        "networkSecurityGroupName" : "[concat(variables('rgname'), '-mgmt-nsg-', variables('namingInfix'))]",
+        "trustedSubnetName" : "[concat(parameters('virtualNetworkName'), '-trust-subnet')]",
+        "backendSubnetName" : "[concat(parameters('virtualNetworkName'), '-backend-subnet')]",
+        "internalLoadBalancerName" : "myPrivateLB",
+        "baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/Version-1-0/app",
+        "nsgURL" : "[concat(variables('baseUrl'),'/nsg-new.json')]",
+        "appVnetURL" : "[concat(variables('baseUrl'),'/deployAppVnet.json')]",
+        "privateLBURL" : "[concat(variables('baseUrl'),'/private-lb-password.json')]",
+        "storageAccountSetupURL" : "[concat(variables('baseUrl'),'/deployStorage.json')]",
+        "vnetPeeringURL": "[concat(variables('baseUrl'), '/deployVnetPeering.json')]",
+        "defaultUdrSetupURL": "[concat(variables('baseUrl'), '/deployDefaultUDR.json')]",
+        "emptyUdrSetupURL": "[concat(variables('baseUrl'), '/deployEmptyUDR.json')]",
+        "networkApiVersion": "2017-06-01",
+        "computeApiVersion": "2017-03-30",
+        "defaultUdrName": "defaultBackendUDR",
+        "emptyUdrName": "emptyUDR",
+        "space": " "
+    },
+    "resources": [
+        {
+            "name": "SetupNSG",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": { 
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('nsgURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "nsgName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    },
+                    "srcIPInboundNSG": {
+                        "value": "[parameters('networkSecurityGroupInboundSrcIP')]"
+                    },
+                    "virtualNetworkAddressPrefix": {
+                        "value": "[parameters('virtualNetworkAddressPrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[equals(parameters('connectToHub'), 'No')]",
+            "name": "SetupEmptyUDR",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupNSG"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('emptyUdrSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "udrName": {
+                         "value": "[variables('emptyUdrName')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[equals(parameters('connectToHub'), 'Yes')]",
+            "name": "SetupDefaultUDR",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupNSG"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('defaultUdrSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "subnetPrefix": {
+                         "value": "0.0.0.0/0"
+                    },
+                    "nextHopIP": {
+                         "value": "[parameters('hubLoadBalancerIP')]"
+                    },
+                    "udrName": {
+                        "value": "[variables('defaultUdrName')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SetupVNET",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupNSG",
+                "Microsoft.Resources/deployments/SetupDefaultUDR",
+                "Microsoft.Resources/deployments/SetupEmptyUDR"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('appVnetURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "connectToHub": {
+                        "value": "[parameters('connectToHub')]"
+                    },
+                    "udrName": {
+                        "value": "defaultBackendUDR"
+                    },
+                    "nsgName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "virtualNetworkAddressPrefix": {
+                        "value": "[parameters('virtualNetworkAddressPrefix')]"
+                    },
+                    "subnetLBName": {
+                         "value": "[variables('trustedSubnetName')]"
+                    },
+                    "subnetWWWName": {
+                         "value": "[variables('backendSubnetName')]"
+                    },
+                    "subnetLBPrefix": {
+                         "value": "[parameters('trustedSubnetPrefix')]"
+                    },
+                    "subnetWWWPrefix": {
+                         "value": "[parameters('backendSubnetPrefix')]"
+                    },
+                    "udrName": {
+                        "value": "[if(equals(parameters('connectToHub'), 'Yes'), variables('defaultUdrName'), variables('emptyUdrName'))]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SettingUpStorageAccount",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('storageAccountSetupURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "storageAccountType": {
+                        "value": "[variables('storageAccountType')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[variables('storageAccountName')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SetupInternalLoadBalancer",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupHubVNetPeering"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('privateLBURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountName": {
+                         "value": "[reference('SettingUpStorageAccount').outputs.sid.value]"
+                    },
+                    "ilbFrontendIP": {
+                        "value": "[parameters('applicationLoadBalancerIP')]"
+                    },
+                    "virtualNetworkName": {
+                         "value": "[reference('SetupVNET').outputs.vnetName.value]"
+                    },
+                    "virtualNetworkExistingRGName": {
+                         "value": "[variables('rgname')]"
+                    },
+                    "lbName": {
+                         "value": "[variables('internalLoadBalancerName')]"
+                    },
+                    "adminUsername": {
+                         "value": "[parameters('username')]"
+                    },
+                    "adminPassword": {
+                         "value": "[parameters('password')]"
+                    },
+                    "subnetName": {
+                         "value": "[variables('backendSubnetName')]"
+                    },
+                    "frontendSubnetName": {
+                         "value": "[variables('trustedSubnetName')]"
+                    },
+                    "vmSize": {
+                         "value": "Standard_D1_v2"
+                    },
+                    "baseUrl": {
+                         "value": "[variables('baseUrl')]"
+                    },
+                    "inboundFirewallResourceGroupName": {
+                         "value": "[parameters('inboundFirewallResourceGroupName')]"
+                    },
+                    "hubFirewallResourceGroupName": {
+                         "value": "[parameters('hubResourceGroupName')]"
+                    }
+                }
+             }
+        },
+        {
+            "condition": "[equals(parameters('connectToHub'), 'Yes')]",
+            "name": "SetupHubVNetPeering",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupVNET"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnetPeeringURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNet1Name": {
+                         "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "vNet2Name": {
+                         "value": "[parameters('hubVnetName')]"
+                    },
+                    "vNet2ResourceGroupName": {
+                         "value": "[parameters('hubResourceGroupName')]"
+                    }
+                }
+             }
+        },
+        {
+            "name": "SetupFwVNetPeering",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SetupInternalLoadBalancer"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnetPeeringURL')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNet1Name": {
+                         "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "vNet2Name": {
+                         "value": "[parameters('inboundFirewallVnetName')]"
+                    },
+                    "vNet2ResourceGroupName": {
+                         "value": "[parameters('inboundFirewallResourceGroupName')]"
+                    }
+                }
+             }
+        }
+    ],
+    "outputs": {
+    }
+}

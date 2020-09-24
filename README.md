@@ -8,6 +8,18 @@ on Azure that are designed to manage sudden surges in demand for application wor
 independently scaling the VM-Series firewalls with the changing workloads.
 
 ## History
+###Version 1.1 - Sep 2020
+The release of version 1.1 is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
+
+Azure Auto Scale Template 1.1 introduces two new options for your VM-Series firewall on Azure autoscaling deployment.
+
+
+• Application Insight Resource Region—in the inbound and hub templates, you can now specify the region for your Application Insight Resource. A new drop-down has been added to the template that allows you to specify the region. See Parameters in the Auto Scaling Templates for Azure for more information.
+
+• Hardware-Based VM-Series Model PAYG License—beginning with PAN-OS 9.1.3, a PAYG license applies a VM-Series capacity license based on the hardware allocated to the instance. the PAYG instance checks the amount of hardware resources available to the instance and applies the largest VM-Series firewall capacity license allowed for the resources available. See VM-Series Firewall Licenses for Public Clouds for more information.
+
+
+
 ### Version 1.0 - Feb 2019  
 The initial release of version 1.0 is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
 
