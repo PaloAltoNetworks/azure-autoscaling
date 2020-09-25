@@ -50,7 +50,7 @@
         "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
         "RootManageSharedAccessKey_name": "RootManageSharedAccessKey",
         "serviceBusApiVersion": "2014-09-01",
-        "baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/Version-1-0/infra",
+        "baseUrl" : "https://raw.githubusercontent.com/PaloAltoNetworks/azure-autoscaling/master/Version-1-1/infra",
         "serviceBusUrl": "[concat(variables('baseUrl'), '/deployServiceBus.json')]",
         "functionHostingPlan": "Basic",
         "appInsightsInstancename": "[concat(parameters('panoramaPluginMessageHandlerName'), '-appinsights-', variables('namingInfix'))]",
@@ -112,7 +112,7 @@
             "apiVersion": "2015-05-01",
             "name": "[variables('appInsightsInstancename')]",
             "type": "microsoft.insights/components",
-            "location": "[variables('locations')]",
+            "location": "[variables('location')]",
             "tags": {
                 "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('panoramaPluginMessageHandlerName'))]": "Resource"
             },
