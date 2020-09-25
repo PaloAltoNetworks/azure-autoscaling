@@ -8,7 +8,7 @@ on Azure that are designed to manage sudden surges in demand for application wor
 independently scaling the VM-Series firewalls with the changing workloads.
 
 ## History
-###Version 1.1 - Sep 2020
+### Version 1.1 - Sep 2020
 The release of version 1.1 is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
 
 Azure Auto Scale Template 1.1 introduces two new options for your VM-Series firewall on Azure autoscaling deployment.
