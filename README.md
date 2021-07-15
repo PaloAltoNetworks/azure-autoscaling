@@ -1,4 +1,4 @@
-# Palo Alto Networks AWS Gallery
+# Palo Alto Networks Azure-Autoscaling Gallery
 
 Gallery (https://gallery.pan.dev/) is a separate forum used to appropriately structure and organize repositories. Easier method of searching Repositories and maintaining each Repository.
 
