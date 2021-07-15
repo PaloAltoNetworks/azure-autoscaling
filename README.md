@@ -1,3 +1,7 @@
+Palo Alto Networks AWS Gallery
+
+Gallery (https://gallery.pan.dev/) is a separate forum used to appropriately structure and organize repositories. Easier method of searching Repositories and maintaining each Repository.
+
 # Auto Scaling the VM-Series-firewall on Azure
 
 Palo Alto Networks now provides templates to help you deploy an auto-scaling tier of VM-Series firewalls
